@@ -1,9 +1,10 @@
 const ffmpeg = require("fluent-ffmpeg");
 const fs = require("fs");
+const path = require("path");
 
 const changeFormat = async (file,format, res) => {
   try {
-    console.log("File is", file, format);
+    let inputFilePath = path.join("uploads", file);
     let outputFile = "output."+format;
 
     // Convert the video format using ffmpeg and stream it directly to the response
@@ -16,6 +17,10 @@ const changeFormat = async (file,format, res) => {
           fs.unlink(__dirname + outputFile, function (err) {
             if (err) throw err;
             console.log("file deleted");
+          });
+          fs.unlink(inputFilePath, function (err) {
+            if (err) throw err;
+            console.log("Input file deleted");
           });
         });
       })
@@ -40,5 +45,6 @@ const changeFormat = async (file,format, res) => {
     }
   }
 };
+
 
 module.exports = changeFormat;

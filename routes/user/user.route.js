@@ -1,41 +1,24 @@
 const express = require("express");
-const headController = require("../../controller/user/user.controller");
-const passport = require("passport");
-
-const headRouter = express.Router();
-
-headRouter.post("/register", headController.register);
-headRouter.put("/login", headController.login);
-
-// google
-headRouter.get("/google", passport.authenticate("google", ["profile", "email"]));
-
-headRouter.get(
-	"/google/callback",
-	passport.authenticate("google", {
-		successRedirect: process.env.CLIENT_URL_SUCCESS,
-		failureRedirect: process.env.CLIENT_URL_FAILURE,
-	})
-);
-
-headRouter.get("/logout", (req, res) => {
-	req.logout();
-	res.redirect(process.env.CLIENT_URL_SUCCESS);
-});
+const userController = require("../../controller/user/user.controller");
+const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase_SignStorage")
 
 
-// meta
-headRouter.get('/auth/facebook',
-  passport.authenticate('facebook'));
+const userRouter = express.Router();
 
-headRouter.get('/auth/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  });
-headRouter.get('/auth/facebook',
-  passport.authenticate('facebook', { scope: ['user_friends', 'manage_pages'] }));
+// add image
+userRouter.put('/updateImage/:id', upload.single('file'), async (req, res, next) => {
+    try {
+
+        await uploadFileToFirebase(req, res, next); // Pass id to uploadFileToFirebase function
+    } catch (error) {
+        console.error('Error handling file upload to Firebase:', error);
+        res.status(500).send({ success: false, message: 'Failed to handle file upload' });
+    }
+}, userController.updateUserImage);
+
+userRouter.get('/image/:id', userController.getUserImage);
+userRouter.get('/getUser/:id', userController.getUser);
+userRouter.put('/updateUser/:id', userController.updateUser);
 
 
-module.exports =  headRouter;
+module.exports =  userRouter;

@@ -5,7 +5,7 @@ const ratingSchema = new Schema({
   userId: {
     type: mongoose.Schema.ObjectId,
     required: true,
-    ref: "user",
+    ref: "User",
   },
   videoId: {
     type: mongoose.Schema.ObjectId,

@@ -18,6 +18,32 @@ const postController = {
           res.status(500).send({ message: error.message });
         }
   },
+
+  async getUserPost(req, res) {
+      
+    let {id} = req.params
+
+      try {
+        await Post.find(
+          { userId: id }
+        )
+          .then((result) => {
+            return res.status(200).send({
+              success: true,
+              data: { message: "Post Found",
+                    posts : result
+               },
+            });
+          })
+          .catch((err) => {
+            return res
+              .status(400)
+              .send({ success: false, data: { error: err.message } });
+          });
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+},
   
 };
 

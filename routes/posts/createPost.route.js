@@ -5,7 +5,7 @@ const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase
 
 const postRouter = express.Router();
 
-// add signature
+// add post
 postRouter.post('/createPost', upload.single('file'), async (req, res, next) => {
     try {
         const id = req.params.id; // Extract id from request parameters
@@ -16,6 +16,7 @@ postRouter.post('/createPost', upload.single('file'), async (req, res, next) => 
     }
 }, postController.createPost);
 
+postRouter.get('/userPost/:id', postController.getUserPost);
 
 
 module.exports =  postRouter;
