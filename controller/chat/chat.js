@@ -31,6 +31,30 @@ const chatController = {
         }
   },
 
+  async sendAudioMessage(req, res) {
+
+    try {
+        const { sender, receiver } = req.body;
+        let audioMessage = req.fileUrl
+
+        // Create a new chat document in MongoDB
+        const newChat = new Chat({
+          sender,
+          receiver,
+          audioMessage,
+        });
+        await newChat.save(); // Save the chat to MongoDB
+    
+        // Emit the chat message to the receiver
+        io.to(receiver).emit("receiveChat", newChat);
+    
+        res.status(200).json({data:{ success: true, data: newChat }});
+      
+    } catch (error) {
+      res.status(500).send({ message: error.message });
+    }
+},
+
 
   // get chatted users
   async getChattedUsers(req, res) {
@@ -84,6 +108,7 @@ const chatController = {
             chat: lastChat[lastChat.length - 1].message,
             date: lastChat[lastChat.length - 1].date,
             isRead: lastChat[lastChat.length - 1].isRead,
+            audioMessage: lastChat[lastChat.length - 1].audioMessage,
             unReadMessages: unread
           });
           user.lastChat = lastChat;

@@ -15,7 +15,7 @@ const chatSchema = new Schema({
   message: {
     type: 'String',
   },
- voice: {
+  audioMessage: {
     type: 'String',
   },
   date: {
