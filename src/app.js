@@ -23,7 +23,7 @@ class App {
         origin: "*",
       },
     });
-    this.PORT = process.env.PORT || 8000;
+    this.PORT = process.env.PORT || 8080;
     dotenv.config();
     this.initMiddleware();
     this.connectToMongoDB();
