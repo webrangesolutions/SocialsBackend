@@ -5,7 +5,7 @@ const paymentMethodSchema = new Schema({
   userId: {
     type: mongoose.Schema.ObjectId,
     required: true,
-    ref: "User",
+    ref: "user",
   },
   paymentMethod: {
     type: String,
@@ -31,6 +31,9 @@ const paymentMethodSchema = new Schema({
     type: String,
     required: true
   },
-  
+  date:{
+    type: Date,
+    default: Date.now
+  }
 });
 module.exports =  mongoose.model("paymentMethod", paymentMethodSchema, "paymentMethods");

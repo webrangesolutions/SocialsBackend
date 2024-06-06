@@ -5,7 +5,10 @@ const followRouter = require("./user/follow.route");
 const postRouter = require("./posts/createPost.route");
 const clipRouter = require("./posts/clips.route");
 const formatRouter = require("./posts/format.route");
-const paymentMethodRouter = require("./paymentMethod/paymentMethod");
+
+const exportRouter = require("./exportVideo/exportVideo.route");
+
+const paymentMethodRouter = require("./paymentMethod/paymentMethod.route");
 const ratingRouter = require("./rating/rating");
 
 const chatRouter = require("./chat/chat.route")
@@ -28,6 +31,8 @@ router.use("/post", postRouter);
 
 router.use("/clip", clipRouter);
 router.use("/format", formatRouter);
+
+router.use("/export", exportRouter);
 
 router.use("/paymentMethod", paymentMethodRouter);
 

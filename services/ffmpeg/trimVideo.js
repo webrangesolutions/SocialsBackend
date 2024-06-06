@@ -38,7 +38,6 @@ const processVideo = async (videoUrl, videoFormat, clips, res) => {
                 // Delete the temporary directory after sending the files
                 try {
                     await fs.promises.rmdir(tempDir, { recursive: true });
-                    console.log('Temporary directory deleted:', tempDir);
                 } catch (deleteErr) {
                     console.error('Error deleting temporary directory:', deleteErr);
                 }

@@ -15,7 +15,10 @@ const postSchema = new Schema({
   userId: {
     type: mongoose.Schema.ObjectId,
     required: true,
-    ref: "User",
+    ref: "user",
+  },
+  title: {
+    type: String
   },
   location: {
     type: String,
@@ -47,6 +50,10 @@ const postSchema = new Schema({
       message: "Clip 'from' and 'duration' values must be unique.",
     },
   },
+  date:{
+    type: Date,
+    default: Date.now
+  }
 });
 
 module.exports = mongoose.model("post", postSchema, "posts");
