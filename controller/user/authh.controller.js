@@ -19,7 +19,7 @@ const registerValidationSchema = Joi.object({
 //validation for login data
 const loginValidationSchema = Joi.object({
   email: Joi.string().required(),
-  password: Joi.string().min(3),
+  password: Joi.string().min(3).required(),
 });
 
 const client = jwksClient({
