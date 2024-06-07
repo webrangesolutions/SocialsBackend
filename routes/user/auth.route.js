@@ -8,6 +8,7 @@ const headRouter = express.Router();
 
 headRouter.post("/register", headController.register);
 headRouter.put("/login", headController.login);
+headRouter.get("/checkUser", headController.checkUser);
 
 // google
 headRouter.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));

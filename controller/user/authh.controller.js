@@ -172,6 +172,29 @@ const userController = {
       res.status(500).send({ error: "Internal Server Error" });
     }
   },
+
+  // check user
+  async checkUser(req, res) {
+    try {
+      
+      const { email } = req.body;
+      const foundUser = await User.findOne({ email });
+  
+      if (!foundUser) {
+        return res.status(400).send({ error: "User not found" });
+      }
+  
+     else{
+      res.status(200).send({
+        message: "User Found",
+        userid: foundUser._id
+      });
+    }
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).send({ error: "Internal Server Error" });
+    }
+  },
 };
 
 module.exports = userController;
