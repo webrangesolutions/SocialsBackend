@@ -1,5 +1,5 @@
 const express = require("express");
-const postController = require("../../controller/posts/createPost.controller");
+const postController = require("../../controller/posts/createGetPost.controller");
 const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase_SignStorage")
 
 
@@ -16,7 +16,7 @@ postRouter.post('/createPost', upload.single('file'), async (req, res, next) => 
     }
 }, postController.createPost);
 
-postRouter.get('/userPost/:id', postController.getUserPost);
+postRouter.get('/userPost/:id?', postController.getUserPost);
 
 
 module.exports =  postRouter;

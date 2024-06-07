@@ -24,9 +24,13 @@ const postController = {
     let {id} = req.params
 
       try {
-        await Post.find(
-          { userId: id }
-        )
+        if (id) {
+          query = { userId: id, ...req.body };
+        } else {
+          query = { ...req.body };
+        }
+
+        await Post.find(query)
           .then((result) => {
             return res.status(200).send({
               success: true,
