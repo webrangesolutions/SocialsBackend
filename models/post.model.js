@@ -30,7 +30,8 @@ const postSchema = new Schema({
       required: true
     },
     area: {
-      type: String
+      type: String,
+      required: true
     },
   },
   mention: {
