@@ -21,7 +21,17 @@ const postSchema = new Schema({
     type: String
   },
   location: {
-    type: String,
+    lat: {
+      type: String,
+      required: true
+    },
+    lng: {
+      type: String,
+      required: true
+    },
+    area: {
+      type: String
+    },
   },
   mention: {
     type: Array,
