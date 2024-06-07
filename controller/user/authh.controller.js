@@ -19,7 +19,7 @@ const registerValidationSchema = Joi.object({
 //validation for login data
 const loginValidationSchema = Joi.object({
   email: Joi.string().required(),
-  password: Joi.string().min(3).required(),
+  password: Joi.string().min(3),
 });
 
 const client = jwksClient({
@@ -134,41 +134,42 @@ const userController = {
 
   // login
   async login(req, res) {
-    const { error } = loginValidationSchema.validate(req.body);
-    if (error) {
-      res.status(400).send(error.details[0].message);
-    } else {
-      const userData = req.body;
-      const user = new User(userData);
-      const founduser = await User.findOne({ email: userData.email });
-
-      if (!founduser) {
-        res.status(400).send({ data: { error: "User not found" } });
-      } else {
-        const validPass = await bcrypt.compare(
-          user.password,
-          founduser.password
-        );
-        if (!validPass) {
-          res.status(400).send({ data: { error: "Wrong password" } });
-        } else {
-          const token = jwt.sign(
-            { _id: founduser._id },
-            process.env.TOKEN_SECRET
-          );
-          res.status(200).send({
-            data: {
-              message: "Logged in successfully",
-              user: {
-                authToken: token,
-                name: founduser.name,
-                email: founduser.email,
-                _id: founduser._id,
-              },
-            },
-          });
-        }
+    try {
+      const { error } = loginValidationSchema.validate(req.body);
+      if (error) {
+        return res.status(400).send(error.details[0].message);
       }
+      
+      const { email, password } = req.body;
+      const foundUser = await User.findOne({ email });
+  
+      if (!foundUser) {
+        return res.status(400).send({ error: "User not found" });
+      }
+  
+      if (!foundUser.password) {
+        // Handle scenarios where password is not set
+        return res.status(200).send({ message: "Password not set for user" });
+      }
+  
+      const validPass = await bcrypt.compare(password, foundUser.password);
+      if (!validPass) {
+        return res.status(400).send({ error: "Wrong password" });
+      }
+  
+      const token = jwt.sign({ _id: foundUser._id }, process.env.TOKEN_SECRET);
+      res.status(200).send({
+        message: "Logged in successfully",
+        user: {
+          authToken: token,
+          name: foundUser.name,
+          email: foundUser.email,
+          _id: foundUser._id,
+        },
+      });
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).send({ error: "Internal Server Error" });
     }
   },
 };
