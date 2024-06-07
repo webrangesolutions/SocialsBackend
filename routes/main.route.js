@@ -13,6 +13,8 @@ const ratingRouter = require("./rating/rating");
 
 const chatRouter = require("./chat/chat.route")
 
+const helpRouter = require("./helpAndSupport/help");
+
 const authGuard = require("../middleware/authGuard.middleware");
 
 const router = express.Router();
@@ -37,6 +39,8 @@ router.use("/export", exportRouter);
 router.use("/paymentMethod", paymentMethodRouter);
 
 router.use("/rating", ratingRouter);
+
+router.use("/help", helpRouter);
 
 module.exports = router;
 

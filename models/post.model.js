@@ -29,10 +29,10 @@ const postSchema = new Schema({
       type: String,
       required: true
     },
-    area: {
-      type: String,
-      required: true
-    },
+  },
+  area: {
+    type: String,
+    required: true
   },
   mention: {
     type: Array,

@@ -1,25 +1,24 @@
-const Post = require("../../models/post.model");
+const HelpAndSupport = require("../../models/helpAndSupport");
 
-const postController = {
-  async createPost(req, res) {
+const helpAndSupportController = {
+  async createHelpAndSupport(req, res) {
       
-      let postData = req.body;
-      postData.video = req.fileUrl
+      let helpAndSupportData = req.body;
      
-        const post = new Post(postData);
+        const helpAndSupport = new HelpAndSupport(helpAndSupportData);
 
         try {
-          const registeredPost = await post.save();
+          await helpAndSupport.save();
           res.status(200).send({
-            message: "Post created successfully",
-            data: post
+            message: "HelpAndSupport created successfully",
+            data: helpAndSupport
           });
         } catch (error) {
           res.status(500).send({ message: error.message });
         }
   },
 
-  async getUserPost(req, res) {
+  async getUserHelpAndSupport(req, res) {
       
     let {id} = req.params
     
@@ -31,13 +30,12 @@ const postController = {
           query = { ...req.body };
         }
 
-        await Post.find(query)
+        await HelpAndSupport.find(query)
           .then((result) => {
             return res.status(200).send({
               success: true,
-              data: { message: "Post Found",
-                    totalPosts: result.length,
-                    posts : result
+              data: { message: "HelpAndSupport Found",
+                    helpAndSupports : result
                },
             });
           })
@@ -53,7 +51,7 @@ const postController = {
   
 };
 
-module.exports = postController;
+module.exports = helpAndSupportController;
 
-// router.post("/login", async (req, res) => {
+// router.helpAndSupport("/login", async (req, res) => {
 // });

@@ -40,16 +40,16 @@ headRouter.get("/logout", (req, res) => {
 
 
 // meta
-headRouter.get('/auth/facebook',
+headRouter.get('/facebook',
   passport.authenticate('facebook'));
 
-headRouter.get('/auth/facebook/callback',
+headRouter.get('/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   function(req, res) {
     // Successful authentication, redirect home.
     res.redirect('/');
   });
-headRouter.get('/auth/facebook',
+headRouter.get('/facebook',
   passport.authenticate('facebook', { scope: ['user_friends', 'manage_pages'] }));
 
 

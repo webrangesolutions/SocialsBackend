@@ -17,7 +17,7 @@ userRouter.put('/updateImage/:id', upload.single('file'), async (req, res, next)
 }, userController.updateUserImage);
 
 userRouter.get('/image/:id', userController.getUserImage);
-userRouter.get('/getUser/:id', userController.getUser);
+userRouter.get('/getUser/:id?', userController.getUser);
 userRouter.put('/updateUser/:id', userController.updateUser);
 
 

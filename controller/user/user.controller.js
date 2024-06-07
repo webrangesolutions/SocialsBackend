@@ -1,5 +1,7 @@
 const User = require("../../models/user.model");
 
+const bcrypt = require("bcryptjs");
+
 const userController = {
     // .................. update image .............................
     async updateUserImage(req, res) {
@@ -82,10 +84,15 @@ const userController = {
     async getUser(req, res) {
         try {
           const {id} = req.params
+
+          let query
+              if (id) {
+                query = { _id: id, ...req.body };
+              } else {
+                query = { ...req.body };
+              }
     
-            await User.findOne(
-              { _id: id }
-            )
+            await User.find(query)
               .then((result) => {
                 return res.status(200).send({
                   success: true,
@@ -111,6 +118,10 @@ const userController = {
     async updateUser(req, res) {
         try {
           const {id} = req.params
+          if (req.body.password) {
+            const salt = await bcrypt.genSalt(10);
+            req.body.password = await bcrypt.hash(req.body.password, salt);
+          }
     
             await User.findOneAndUpdate(
               { _id: id },
