@@ -1,5 +1,6 @@
 const express = require("express");
 const userController = require("../../controller/user/user.controller");
+const emailController = require("../../controller/user/sendMail.controller");
 const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase_SignStorage")
 
 
@@ -20,5 +21,9 @@ userRouter.get('/image/:id', userController.getUserImage);
 userRouter.get('/getUser/:id?', userController.getUser);
 userRouter.put('/updateUser/:id', userController.updateUser);
 
+userRouter.post('/sendEmail', emailController.sendLinkToEmail);
+userRouter.put('/updateDuration/:id', emailController.updateDuration);
+userRouter.get('/checkLink/:id', emailController.checkLink);
+userRouter.get('/editors', emailController.getEditors);
 
 module.exports =  userRouter;

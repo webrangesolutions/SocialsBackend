@@ -1,6 +1,6 @@
 const express = require("express");
 const exportVideoController = require("../../controller/exportVideos/export.controller");
-const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase_SignStorage")
+const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase_MetaData")
 
 
 const exportVideoRouter = express.Router();

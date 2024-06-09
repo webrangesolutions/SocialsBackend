@@ -7,6 +7,7 @@ const clipRouter = require("./posts/clips.route");
 const formatRouter = require("./posts/format.route");
 
 const exportRouter = require("./exportVideo/exportVideo.route");
+const invoiceRouter = require("./exportVideo/invoice.route");
 
 const paymentMethodRouter = require("./paymentMethod/paymentMethod.route");
 const ratingRouter = require("./rating/rating");
@@ -35,6 +36,7 @@ router.use("/clip", clipRouter);
 router.use("/format", formatRouter);
 
 router.use("/export", exportRouter);
+router.use("/invoice", invoiceRouter);
 
 router.use("/paymentMethod", paymentMethodRouter);
 

@@ -7,30 +7,22 @@ const paymentMethodSchema = new Schema({
     required: true,
     ref: "user",
   },
-  paymentMethod: {
+  sortCode: {
     type: String,
     required: true
   },
-  location: {
+  accName: {
     type: String,
     required: true
   },
-  holderName: {
-    type: String,
+  accNumber: {
+    type: Number,
     required: true,
   },
-  accountType: {
-    type: String,
+  bacsCode: {
+    type: Number,
     required: true
   }, 
-  routingNumber: {
-    type: String,
-    required: true,
-  },
-  accountNumber: {
-    type: String,
-    required: true
-  },
   date:{
     type: Date,
     default: Date.now
