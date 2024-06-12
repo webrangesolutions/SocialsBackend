@@ -8,14 +8,14 @@ const passportGoogleSetup = require('../services/passport/googleAuth');
 // const passportMetaSetup = require('../services/passport/metaAuth');
 const http = require("http");
 const mongoose = require("mongoose");
-const session = require("express-session"); // Import express-session
+const session = require("express-session");
 const path = require("path");
 
 class App {
   constructor() {
+    dotenv.config(); // Load environment variables at the beginning
     this.app = express();
-    this.app.use(express.json());
-    this.http = new http.Server(this.app);
+    this.http = http.Server(this.app);
     this.io = require("socket.io")(this.http, {
       withCredentials: true,
       transports: ["websocket", "polling"],
@@ -24,7 +24,7 @@ class App {
       },
     });
     this.PORT = process.env.PORT || 8080;
-    dotenv.config();
+
     this.initMiddleware();
     this.connectToMongoDB();
     this.initRoutes();
@@ -32,11 +32,12 @@ class App {
 
   initMiddleware() {
     this.app.use(cors());
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '100mb' }));
+    this.app.use(express.urlencoded({ limit: '100mb', extended: false }));
 
     // Configure session middleware
     this.app.use(session({
-      secret: process.env.SESSION_SECRET || 'your-secret-key', // Use a strong secret key
+      secret: process.env.SESSION_SECRET || 'your-secret-key',
       resave: false,
       saveUninitialized: true,
       cookie: { secure: false } // Set to true if using HTTPS
@@ -54,13 +55,12 @@ class App {
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        useCreateIndex: true,
       },
-      (err, db) => {
+      (err) => {
         if (err) {
-          console.log("err", err);
+          console.log("Database connection error:", err);
         } else {
-          console.log("db connected");
+          console.log("Database connected");
         }
       }
     );
@@ -77,7 +77,7 @@ class App {
 
   createServer() {
     this.http.listen(this.PORT, () => {
-      console.log("Server started at port 8000");
+      console.log(`Server started at port ${this.PORT}`);
     });
   }
 }

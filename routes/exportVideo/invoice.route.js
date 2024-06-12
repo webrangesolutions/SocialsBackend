@@ -6,7 +6,7 @@ const invoiceRouter = express.Router();
 
 invoiceRouter.get('/', invoiceController.getInvoice);
 invoiceRouter.get('/getWallet/:userId', invoiceController.getWallet);
-invoiceRouter.put('/markPaid', invoiceController.markPaid);
+invoiceRouter.put('/markPaid/:id?', invoiceController.markPaid);
 invoiceRouter.get('/exportCsv', invoiceController.exportCsv);
 
 

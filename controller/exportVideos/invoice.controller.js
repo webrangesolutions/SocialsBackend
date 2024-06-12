@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const invoiceController = {
   async getInvoice(req, res) {
     let { id } = req.params;
-
+  
     try {
       let query;
       if (id) {
@@ -13,11 +13,11 @@ const invoiceController = {
       } else {
         query = { ...req.body };
       }
-
+  
       const pipeline = [
         // Match documents based on the query criteria
         { $match: query },
-
+      
         // Populate the 'post' field
         {
           $lookup: {
@@ -28,7 +28,7 @@ const invoiceController = {
           },
         },
         { $unwind: "$post" },
-
+      
         // Populate the 'post.userId' field
         {
           $lookup: {
@@ -39,15 +39,40 @@ const invoiceController = {
           },
         },
         { $unwind: "$post.userId" },
-
-        // Project required fields
+      
+        // Project required fields including the status
         {
           $project: {
-            date: 1,
-            expiry: 1,
+            date: {
+              $dateToString: {
+                format: "%d %B, %Y",
+                date: "$date",
+                timezone: "UTC"
+              }
+            },
+            expiry: {
+              $dateToString: {
+                format: "%d %B, %Y",
+                date: "$expiry",
+                timezone: "UTC"
+              }
+            },
             amount: 1,
             invoiceId: 1,
             isPaid: 1,
+            status: {
+              $cond: {
+                if: { $eq: ["$isPaid", true] },
+                then: "Paid",
+                else: {
+                  $cond: {
+                    if: { $gt: ["$expiry", new Date()] },
+                    then: "Pending",
+                    else: "Overdue"
+                  }
+                }
+              }
+            },
             "post.video": 1,
             "post.date": 1,
             "post.duration": 1,
@@ -55,7 +80,7 @@ const invoiceController = {
             "post.userId.image": 1,
           },
         },
-
+      
         // Stage to collect all invoices and calculate the total amount
         {
           $group: {
@@ -64,29 +89,29 @@ const invoiceController = {
             totalAmount: { $sum: "$amount" },
           },
         },
-      ];
-
+      ];      
+  
       // Execute the first pipeline to get invoices and total amount
       const result = await Export.aggregate(pipeline);
-
+  
       // Extract invoices and total amount
       const invoices = result.length ? result[0].invoices : [];
       const totalAmount = result.length ? result[0].totalAmount : 0;
-
+  
       // Calculate pending amount in a separate aggregation
       const pendingPipeline = [
         { $match: query },
         { $match: { isPaid: false } },
         { $group: { _id: null, pendingAmount: { $sum: "$amount" } } },
       ];
-
+  
       const pendingResult = await Export.aggregate(pendingPipeline);
-
+  
       // Extract pending amount
       const pendingAmount = pendingResult.length
         ? pendingResult[0].pendingAmount
         : 0;
-
+  
       return res.status(200).send({
         success: true,
         data: {
@@ -99,13 +124,21 @@ const invoiceController = {
     } catch (error) {
       return res.status(500).send({ message: error.message });
     }
-  },
+  },  
 
   // ...................... mark paid ...........................
   async markPaid(req, res) {
     try {
+      let { id } = req.params;
+  
+        let query;
+        if (id) {
+          query = { invoiceId : id, isPaid: false };
+        } else {
+          query = {isPaid: false };
+        }
       const result = await Export.updateMany(
-        { isPaid: false },
+        query,
         { $set: { isPaid: true, paidDate: Date.now() } }
       );
 
@@ -121,6 +154,7 @@ const invoiceController = {
         });
       }
     } catch (error) {
+    console.log(error)
       return res.status(500).send({
         success: false,
         data: { error: error.message },

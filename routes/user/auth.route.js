@@ -42,16 +42,29 @@ headRouter.get("/logout", (req, res) => {
 
 // meta
 headRouter.get('/facebook',
-  passport.authenticate('facebook'));
+  passport.authenticate('facebook', { scope: ['user_friends', 'email'] }) // Ensure 'email' scope is requested
+);
 
 headRouter.get('/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  });
-headRouter.get('/facebook',
-  passport.authenticate('facebook', { scope: ['user_friends', 'manage_pages'] }));
+  (req, res, next) => {
+    passport.authenticate('facebook', (err, user, info) => {
+      if (err) {
+        console.error("Error during authentication:", err);
+        return res.redirect(process.env.CLIENT_URL_FAILURE);
+      }
+      if (!user) {
+        return res.redirect(process.env.CLIENT_URL_FAILURE);
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Error logging in user:", err);
+          return res.redirect(process.env.CLIENT_URL_FAILURE);
+        }
+        return res.redirect('/');
+      });
+    })(req, res, next);
+  }
+);
 
 
 // apple
