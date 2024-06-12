@@ -32,8 +32,8 @@ class App {
 
   initMiddleware() {
     this.app.use(cors());
-    this.app.use(express.json({ limit: '100mb' }));
-    this.app.use(express.urlencoded({ limit: '100mb', extended: false }));
+    this.app.use(express.json({ limit: '50mb' }));
+    this.app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
     // Configure session middleware
     this.app.use(session({
