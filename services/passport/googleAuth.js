@@ -16,24 +16,6 @@ passport.use(
     async (req, accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
-        if (!user) {
-          user = new User({
-            googleId: profile.id,
-            name: profile.displayName,
-            email: profile.emails[0].value,
-          });
-          await user.save();
-        }
-
-        // Create JWT token
-        const token = jwt.sign(
-          { _id: user._id },
-          process.env.TOKEN_SECRET,
-          { expiresIn: '1h' } // Optional: set token expiration time
-        );
-
-        // Attach token to the user object
-        user.authToken = token;
 
         return done(null, user);
       } catch (err) {

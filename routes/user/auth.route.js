@@ -23,13 +23,10 @@ headRouter.get(
     // Successful authentication
     const user = req.user;
     res.status(200).send({
-      message: user ? "Logged in successfully" : "User registered successfully",
+      message: user ? "User exist" : "User donot exist",
       data: {
-        authToken: user.authToken,
-        name: user.name,
-        email: user.email,
-        _id: user._id,
-      },
+        user: user? user : {}
+      }
     });
   }
 );

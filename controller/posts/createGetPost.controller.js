@@ -52,7 +52,7 @@ const postController = {
       }
 },
 
-async getUserPostWithTime(req, res) {
+async  getUserPostWithTime(req, res) {
   let { id } = req.params;
 
   try {
@@ -64,6 +64,8 @@ async getUserPostWithTime(req, res) {
     }
 
     console.log('Query:', query); // Log the query to see what's being passed
+
+    let idCounter = 1; // Initialize a counter for the id
 
     const results = await Post.aggregate([
       { $match: query },
@@ -80,15 +82,21 @@ async getUserPostWithTime(req, res) {
             $push: {
               _id: '$_id',
               video: '$video',
-              date:'$date',
-              thumbnail:'$thumbnail',
+              date: '$date',
+              thumbnail: '$thumbnail',
             }
           }
         }
       },
       {
+        $addFields: {
+          id: { $toString: idCounter++ } // Increment idCounter for each group
+        }
+      },
+      {
         $project: {
           _id: 0,
+          id: 1,
           date: {
             $dateToString: {
               format: '%Y-%m-%d',
