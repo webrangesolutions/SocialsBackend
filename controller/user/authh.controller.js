@@ -68,10 +68,14 @@ const userController = {
         userData.googleId = "";
       }
       const emailExists = await User.findOne({ email: userData.email });
-      const token = jwt.sign(
-        { _id: emailExists._id },
-        process.env.TOKEN_SECRET
-      );
+      let token
+      if(emailExists){
+        token = jwt.sign(
+          { _id: emailExists._id },
+          process.env.TOKEN_SECRET
+        );
+      }
+      
 
       if (emailExists) {
         return res.status(200).json({
@@ -94,6 +98,10 @@ const userController = {
 
         try {
           const registeredUser = await user.save();
+          token = jwt.sign(
+            { _id: registeredUser._id },
+            process.env.TOKEN_SECRET
+          );
           
           res.status(200).send({
             message: "User registered successfully",
