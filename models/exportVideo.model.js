@@ -67,7 +67,6 @@ exportVideoSchema.pre('save', function(next) {
 
   // Generate and set invoiceId
   this.invoiceId = generateInvoiceId();
-
   next();
 });
 

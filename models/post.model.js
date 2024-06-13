@@ -44,6 +44,10 @@ const postSchema = new Schema({
     type: String,
     required: true,
   },
+  thumbnail: {
+    type: String,
+    required: true,
+  },
   clips: {
     type: [clipSchema],
     validate: {
