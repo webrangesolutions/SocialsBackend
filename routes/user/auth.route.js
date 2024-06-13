@@ -24,9 +24,7 @@ headRouter.get(
     const user = req.user;
     res.status(200).send({
       message: user ? "User exist" : "User donot exist",
-      data: {
-        user: user? user : {}
-      }
+      user: user? user : {}
     });
   }
 );

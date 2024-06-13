@@ -68,11 +68,22 @@ const userController = {
         userData.googleId = "";
       }
       const emailExists = await User.findOne({ email: userData.email });
+      const token = jwt.sign(
+        { _id: emailExists._id },
+        process.env.TOKEN_SECRET
+      );
 
       if (emailExists) {
-        return res.status(400).json({
+        return res.status(200).json({
           success: false,
-          data: { error: "This email already exists. Try logging in" },
+          data: { message: "This email already exists. Try logging in",
+            data: {
+              authToken: token,
+              name: emailExists.name,
+              email: emailExists.email,
+              _id: emailExists._id,
+            },
+           },
         });
       } else {
         const user = new User(userData);
@@ -83,10 +94,7 @@ const userController = {
 
         try {
           const registeredUser = await user.save();
-          const token = jwt.sign(
-            { _id: registeredUser._id },
-            process.env.TOKEN_SECRET
-          );
+          
           res.status(200).send({
             message: "User registered successfully",
             data: {
