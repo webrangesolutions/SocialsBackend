@@ -143,6 +143,22 @@ async  getUserPostWithTime(req, res) {
     res.status(500).json({ success: false, message: error.message });
   }
 },
+
+async proxyController(req, res) {
+  try {
+    const videoUrl = req.query.url; // Assuming url is passed as a query parameter
+    const response = await fetch(videoUrl);
+    if (!response.ok) {
+      throw new Error('Failed to fetch video');
+    }
+    const videoBlob = await response.blob();
+    res.setHeader('Content-Type', response.headers.get('Content-Type'));
+    res.send(videoBlob);
+  } catch (error) {
+    console.error('Error proxying video:', error);
+    res.status(500).send({ error: 'Failed to proxy video' });
+  }
+}
   
 };
 

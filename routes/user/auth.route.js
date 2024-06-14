@@ -34,10 +34,9 @@ headRouter.get("/logout", (req, res) => {
 	res.redirect(process.env.CLIENT_URL_SUCCESS);
 });
 
-
 // meta
 headRouter.get('/facebook',
-  passport.authenticate('facebook', { scope: ['user_friends', 'email'] }) // Ensure 'email' scope is requested
+  passport.authenticate('facebook', { scope: ['email'] }) // Ensure 'email' scope is requested
 );
 
 headRouter.get('/facebook/callback',
@@ -50,12 +49,19 @@ headRouter.get('/facebook/callback',
       if (!user) {
         return res.redirect(process.env.CLIENT_URL_FAILURE);
       }
-      req.logIn(user, (err) => {
+      req.logIn(user, async (err) => {
         if (err) {
           console.error("Error logging in user:", err);
           return res.redirect(process.env.CLIENT_URL_FAILURE);
         }
-        return res.redirect('/');
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+          expiresIn: '1h'
+        });
+
+        // Redirect with token (you might want to handle this on the client side)
+        res.redirect(`${process.env.CLIENT_URL_SUCCESS}?token=${token}`);
       });
     })(req, res, next);
   }
@@ -63,7 +69,20 @@ headRouter.get('/facebook/callback',
 
 
 // apple
-headRouter.get('/apple',headController.registerUsingApple);
+headRouter.get('/apple',
+  passport.authenticate('apple'));
+
+headRouter.post('/apple/callback',
+  express.urlencoded(),
+  passport.authenticate('apple', { failureRedirect: '/login' }),
+  (req, res) => {
+     // Generate JWT token
+     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: '1h'
+    });
+    // Successful authentication, redirect home.
+    res.redirect(`${process.env.CLIENT_URL_SUCCESS}?token=${token}`);
+  });
 
 
 module.exports =  headRouter;

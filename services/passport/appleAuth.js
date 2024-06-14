@@ -1,14 +1,61 @@
-passport.use(new AppleStrategy({
-  clientID: 'com.example.account', // Services ID
-  teamID: '1234567890', // Team ID of your Apple Developer Account
-  keyID: 'ABCDEFGHIJ', // Key ID, received from https://developer.apple.com/account/resources/authkeys/list
-  key: fs.readFileSync(path.join('path', 'to', 'AuthKey_XYZ1234567.p8')), // Private key, downloaded from https://developer.apple.com/account/resources/authkeys/list
-  scope: ['name', 'email'],
-  callbackURL: 'https://example.com/auth/apple/callback'
-},
-(accessToken, refreshToken, profile, cb) => {
-  User.findOrCreate({ exampleId: profile.id }, (err, user) => {
-    return cb(err, user);
-  });
-}
-));
+const AppleStrategy = require('@nicokaiser/passport-apple').Strategy;
+const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+const User = require('../../models/user.model'); // Adjust the path according to your project structure
+
+dotenv.config();
+
+passport.use(
+  new AppleStrategy(
+    {
+      clientID: process.env.APPLE_CLIENT_ID,
+      teamID: process.env.APPLE_TEAM_ID,
+      keyID: process.env.APPLE_KEY_ID,
+      key: fs.readFileSync(
+        path.join(__dirname, './config/AuthKey_67FHCH3CU7.p8')
+      ),
+      callbackURL: process.env.APPLE_CALLBACK_URL,
+      scope: ['email'],
+    },
+    ((accessToken, refreshToken, profile, cb) => {
+      // Here, check if the idToken exists in your database!
+      const { id, email } = profile;
+
+      User.findOne({
+        $and: [{ appleToken: { $exists: true } }, { appleToken: id }, { email }],
+      })
+        .then((user) => {
+          if (user !== null) {
+            return cb(null, user);
+          }
+          stripe.addNewUser(email).then((customer) => {
+            // create user
+            const userBody = {
+              email,
+              name: email.split('@')[0],
+              appleToken: id,
+              customerId: customer.id,
+              isVerified: true
+            };
+            User.create(userBody)
+              .then((user) => {
+                // send welcome email
+                sendEmail({
+                  userID: user._id.toString(),
+                  templateName: 'welcome',
+                  data: {
+                    userName: user.name
+                  }
+                }).catch((error) => {
+                  logger.warn({ error }, 'Error sending welcome email');
+                });
+
+                cb(null, user);
+              })
+              .catch((err) => cb(err, null));
+          });
+        })
+        .catch((err) => cb(err, null));
+    })
+  )
+);
