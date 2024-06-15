@@ -5,9 +5,9 @@ const processVideo = require("../../services/ffmpeg/changeCodec");
 const videoConversionController = {
   async changeFormat(req, res) {
     try {
-      const inputFilePath = req.file.filename; // Use req.file.path provided by multer
+      const inputFilePath = req.body.file; // Use req.file.path provided by multer
       const format = req.body.format;
-      console.log("files are", req.file);
+      console.log("files are", req.body.file);
       await changeFormat(inputFilePath, format, res);
     } catch (error) {
       console.error("Error after headers sent:", error);

@@ -11,15 +11,15 @@ ffmpeg.setFfprobePath(ffprobePath);
 
 const changeFormat = async (file, format, res) => {
   try {
-    const inputFilePath = path.join('uploads', file);
+    const inputFilePath = file;
     const outputFile = 'output.' + format;
 
     console.log('Converting', path.extname(file), 'to', format);
 
-    // Check if the input file exists
-    if (!fs.existsSync(inputFilePath)) {
-      throw new Error('Input file does not exist');
-    }
+    // // Check if the input file exists
+    // if (!fs.existsSync(inputFilePath)) {
+    //   throw new Error('Input file does not exist');
+    // }
 
     // Convert MXF to MOV using FFmpeg's basic mode
     await new Promise((resolve, reject) => {
