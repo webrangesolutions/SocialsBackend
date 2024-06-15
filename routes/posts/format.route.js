@@ -20,6 +20,6 @@ const upload = multer({ storage: storage }); // Temporary storage for uploaded f
 formatRouter.put('/changeFormat', upload.single('inputFile'), formatController.changeFormat);
 formatRouter.put('/changeFormatToProres', upload.single('inputFile'), formatController.changeFormatToProres);
 
-formatRouter.put('/changeCodecHevc', upload.single('inputFile'), formatController.changeCodecToHevc);
+formatRouter.put('/changeCodec', formatController.changeCodec);
 
 module.exports = formatRouter;

@@ -1,80 +1,101 @@
-const ffmpeg = require("fluent-ffmpeg");
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
+const { uploadFileToFirebase } = require("../../services/firebase/Firebase_post");
 
-const convertToHEVC = async (file, codec, res) => {
+const processVideo = async (videoUrl, videoFormat, codec, res) => {
+  let tempDir;
+
   try {
-    // Extract file extension from the input file
-    const inputExt = path.extname(file);
+      // Validate video URL and format
+      if (!videoUrl || !videoFormat) {
+          throw new Error("Missing video URL or format.");
+      }
 
-    console.log("File is", file, codec);
-    let outputFile = "output" + inputExt;
-    let inputFilePath = path.join("uploads", file);
+      // Temporary directory to store the trimmed video
+      tempDir = await fs.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
+      const outputFilePath = path.join(tempDir, `trimmedVideo.${videoFormat}`);
 
-    let vcodec, options;
-    if (codec == "hevc") {
-      vcodec = "libx265";
-      options = [
-        "-c:v libx265", // Use HEVC codec
-        "-preset slow", // Encoding speed (can be ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)
-        "-crf 28", // Constant Rate Factor for quality (lower is better quality, 0 is lossless)
-      ];
-    }
-    else if(codec == 'h264'){
-      vcodec = 'libx264';
-      options = [
-        '-c:v libx264', // Use H.264 codec
-          '-preset slow', // Encoding speed (can be ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)
-          '-crf 23' // Constant Rate Factor for quality (lower is better quality, 0 is lossless)
-          ];
-    } else if(codec == 'av1'){
-      vcodec = 'libaom-av1';
-      options = [
-        '-c:v libaom-av1', // Use AV1 codec
-        '-cpu-used 4', // Set CPU usage (0-8, higher values may improve quality but increase encoding time)
-        '-b:v 0', // Use constant quality mode
-        '-crf 30' // Constant Rate Factor for quality (lower is better quality, 0 is lossless)
-      ]
-    }
-  
-    // Convert the video format using ffmpeg and stream it directly to the response
-    ffmpeg(inputFilePath)
-      .videoCodec(vcodec) // Use the HEVC codec
-      .outputOptions(options)
-      .on("end", (stdout, stderr) => {
-        console.log("Video conversion completed");
-        res.download(__dirname + outputFile, function (err) {
-          if (err) throw err;
-          fs.unlink(__dirname + outputFile, function (err) {
-            if (err) throw err;
-            console.log("Output file deleted");
-          });
-          fs.unlink(inputFilePath, function (err) {
-            if (err) throw err;
-            console.log("Input file deleted");
-          });
-        });
-      })
-      .on("error", (err) => {
-        console.error("Error occurred during conversion:", err.message);
-        if (!res.headersSent) {
-          res.status(500).json({
-            success: false,
-            error: "Error occurred during video conversion",
-            ffmpegError: err.message,
-          });
-        }
-      })
-      .saveToFile(__dirname + "output" + inputExt); // Save output file with same extension
-  } catch (error) {
-    console.error("Error:", error);
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: error.message,
+      // Process the video clip
+      await changeCodec(videoUrl, videoFormat, codec, outputFilePath);
+
+      // Upload the trimmed video to Firebase
+      const firebaseUrl = await uploadFileToFirebase(outputFilePath, `trimmedVideo.${videoFormat}`);
+
+      // Send the Firebase video URL as response
+      res.status(200).send({
+          success: true,
+          videoUrl: firebaseUrl,
       });
-    }
+  } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send({
+          success: false,
+          data: { error: error.message },
+      });
+  } finally {
+      // Delete the temporary directory after processing
+      if (tempDir) {
+          try {
+              await fs.promises.rmdir(tempDir, { recursive: true });
+              console.log('Temporary directory deleted:', tempDir);
+          } catch (deleteErr) {
+              console.error('Error deleting temporary directory:', deleteErr);
+          }
+      }
   }
 };
 
-module.exports = convertToHEVC;
+
+// Function to change codec and save to outputFilePath
+const changeCodec = (videoUrl, videoFormat, codec, outputFilePath) => {
+    let vcodec, options;
+
+    if (codec === "hevc") {
+        vcodec = "libx265";
+        options = [
+            "-c:v", "libx265",    // Use HEVC codec
+            "-preset", "slow",    // Encoding speed
+            "-crf", "28"          // Constant Rate Factor for quality
+        ];
+    } else if (codec === 'h264') {
+        vcodec = 'libx264';
+        options = [
+            "-c:v", "libx264",    // Use H.264 codec
+            "-preset", "slow",    // Encoding speed
+            "-crf", "23"          // Constant Rate Factor for quality
+        ];
+    } else if (codec === 'av1') {
+        vcodec = 'libaom-av1';
+        options = [
+            "-c:v", "libaom-av1", // Use AV1 codec
+            "-cpu-used", "4",     // Set CPU usage
+            "-b:v", "0",          // Use constant quality mode
+            "-crf", "30"          // Constant Rate Factor for quality
+        ];
+    }
+
+    return new Promise((resolve, reject) => {
+        ffmpeg(videoUrl)
+            // .withOutputFormat(videoFormat)
+            
+            .videoCodec(vcodec)
+            .outputOptions(options)
+            .on('start', (commandLine) => {
+                console.log('ffmpeg process started with command:', commandLine);
+            })
+            .on('error', (err, stdout, stderr) => {
+                console.error('Error occurred:', err.message);
+                console.error('ffmpeg stdout:', stdout);
+                console.error('ffmpeg stderr:', stderr);
+                reject(err);
+            })
+            .on('end', () => {
+                console.log('Processing done:', outputFilePath);
+                resolve();
+            })
+            .save(outputFilePath);
+    });
+};
+
+module.exports = processVideo;

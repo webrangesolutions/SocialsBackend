@@ -1,6 +1,6 @@
 const changeFormat = require("../../services/ffmpeg/changeFormat");
 const changeFormatToProres = require("../../services/ffmpeg/changeFormatToProres");
-const changeToHevc = require("../../services/ffmpeg/changeCodec");
+const processVideo = require("../../services/ffmpeg/changeCodec");
 
 const videoConversionController = {
   async changeFormat(req, res) {
@@ -22,9 +22,9 @@ const videoConversionController = {
 
   async changeFormatToProres(req, res) {
     try {
-      const inputFilePath = req.file.filename; 
-      console.log("files are", req.file);
-      await changeFormatToProres(inputFilePath, res, req);
+      const {videoUrl, videoFormat} = req.body
+      console.log(req.body)
+      await changeFormatToProres(videoUrl, videoFormat, res);
     } catch (error) {
       console.error("Error after headers sent:", error);
       if (!res.headersSent) {
@@ -36,12 +36,11 @@ const videoConversionController = {
     }
   },
 
-  async changeCodecToHevc(req, res) {
+  async changeCodec(req, res) {
     try {
-      const inputFilePath = req.file.filename; // Use req.file.path provided by multer
-      console.log("files are", req.file);
-      const format = req.body.format;
-      await changeToHevc(inputFilePath, format, res);
+      const {videoUrl, videoFormat, codec} = req.body
+      console.log(req.body)
+      await processVideo(videoUrl, videoFormat, codec, res);
     } catch (error) {
       console.error("Error after headers sent:", error);
       if (!res.headersSent) {

@@ -41,33 +41,28 @@ const clipController = {
   },
 
   async getTrimmedVideo(req, res) {
+    const { id, start, duration } = req.params;
+    
     try {
-      const { id } = req.params;
-      const post = await Post.findOne({ _id: id });
-  
-      if (!post) {
-        return res.status(404).send({
-          success: false,
-          data: { error: "Post not found" },
-        });
-      }
-  
-      // Extract the video format from the URL
-      const videoUrl = post.video;
-      const parsedUrl = url.parse(videoUrl);
-      const videoFormat = path.extname(parsedUrl.pathname).substring(1);
-      await processVideo(videoUrl, videoFormat,post.clips ,res);
-      
-  
+        // Fetch the video URL and format from the database
+        const post = await Post.findById(id);
+        if (!post) {
+            return res.status(404).send({
+                success: false,
+                data: { error: 'Post not found' },
+            });
+        }
+        
+        const videoUrl = post.video;
+        const videoFormat = 'mp4';  // Assuming the format is mp4; adjust as necessary
+
+        await processVideo(videoUrl, videoFormat, start, duration, req, res);
     } catch (error) {
-      if (!res.headersSent) {
-        return res.status(500).send({
-          success: false,
-          data: { error: error.message },
+        console.error('Error processing video:', error);
+        res.status(500).send({
+            success: false,
+            data: { error: 'Failed to process video' },
         });
-      } else {
-        console.error('Error after headers sent:', error);
-      }
     }
   },
 };

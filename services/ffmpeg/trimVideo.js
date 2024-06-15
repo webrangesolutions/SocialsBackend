@@ -1,48 +1,34 @@
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const archiver = require('archiver');
+const { uploadFileToFirebase } = require("../../services/firebase/Firebase_post");
 
-const processVideo = async (videoUrl, videoFormat, clips, res) => {
+const processVideo = async (videoUrl, videoFormat, start, duration, req, res) => {
     try {
-        console.log("clips are", clips);
 
-        // Temporary directory to store trimmed videos
-        const tempDir = await fs.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideos-'));
+        // Temporary file to store the trimmed video
+        const tempDir = await fs.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
+        const outputFilePath = path.join(tempDir, 'trimmedVideo.mp4');
 
-        const trimmedVideoPaths = [];
+        // Process the video clip
+        await cutVideo(videoUrl, videoFormat, start, duration, outputFilePath);
 
-        // Process each clip
-        for (let i = 0; i < clips.length; i++) {
-            const clip = clips[i];
-            const outputFilePath = path.join(tempDir, `clip_${i}.mp4`);
-            await cutVideo(videoUrl, videoFormat, clip.from, clip.duration, outputFilePath);
-            trimmedVideoPaths.push(outputFilePath);
-        }
+        // Upload the trimmed video to Firebase
+        const firebaseUrl = await uploadFileToFirebase(outputFilePath, 'trimmedVideo.mp4');
 
-        // Create a ZIP archive of the trimmed videos
-        const zipFilePath = path.join(tempDir, 'trimmedVideos.zip');
-        await createZip(trimmedVideoPaths, zipFilePath);
-
-        // Send the ZIP file as response
-        res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', 'attachment; filename="trimmedVideos.zip"');
-        res.sendFile(zipFilePath, async (err) => {
-            if (err) {
-                console.error('Error sending file:', err);
-                res.status(500).send({
-                    success: false,
-                    data: { error: 'Error sending file' },
-                });
-            } else {
-                // Delete the temporary directory after sending the files
-                try {
-                    await fs.promises.rmdir(tempDir, { recursive: true });
-                } catch (deleteErr) {
-                    console.error('Error deleting temporary directory:', deleteErr);
-                }
-            }
+        // Send the Firebase video URL as response
+        res.status(200).send({
+            success: true,
+            videoUrl: firebaseUrl,
+            duration: duration
         });
+
+        // Delete the temporary file
+        try {
+            await fs.promises.rmdir(tempDir, { recursive: true });
+        } catch (deleteErr) {
+            console.error('Error deleting temporary directory:', deleteErr);
+        }
     } catch (error) {
         console.error('Error:', error);
         res.status(500).send({
@@ -54,12 +40,19 @@ const processVideo = async (videoUrl, videoFormat, clips, res) => {
 
 // Cut video and save to outputFilePath
 const cutVideo = (videoUrl, videoFormat, startTime, duration, outputFilePath) => {
+    let vcodec = 'libx264';
+    let options = [
+        '-c:v libx264', // Use H.264 codec
+        '-preset slow', // Encoding speed (can be ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)
+        '-crf 23' // Constant Rate Factor for quality (lower is better quality, 0 is lossless)
+    ];
     return new Promise((resolve, reject) => {
         ffmpeg(videoUrl)
             .setStartTime(startTime)
             .duration(duration)
             .format(videoFormat)
-            .outputOptions('-movflags frag_keyframe+empty_moov')
+            .videoCodec(vcodec)
+            .outputOptions(options)
             .on('start', (commandLine) => {
                 console.log('ffmpeg process started with command:', commandLine);
             })
@@ -74,35 +67,6 @@ const cutVideo = (videoUrl, videoFormat, startTime, duration, outputFilePath) =>
                 resolve();
             })
             .save(outputFilePath);
-    });
-};
-
-// Create ZIP archive of files
-const createZip = (files, zipFilePath) => {
-    return new Promise((resolve, reject) => {
-        const output = fs.createWriteStream(zipFilePath);
-        const archive = archiver('zip', {
-            zlib: { level: 9 },
-        });
-
-        output.on('close', () => {
-            console.log(`${archive.pointer()} total bytes`);
-            console.log('Archiver has been finalized and the output file descriptor has closed.');
-            resolve();
-        });
-
-        archive.on('error', (err) => {
-            reject(err);
-        });
-
-        archive.pipe(output);
-
-        // Append each file to the ZIP archive
-        for (const file of files) {
-            archive.file(file, { name: path.basename(file) });
-        }
-
-        archive.finalize();
     });
 };
 
