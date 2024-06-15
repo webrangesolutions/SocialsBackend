@@ -45,14 +45,14 @@ const invoiceController = {
           $project: {
             date: {
               $dateToString: {
-                format: "%d %B, %Y",
+                format: '%Y-%m-%d',
                 date: "$date",
                 timezone: "UTC",
               },
             },
             expiry: {
               $dateToString: {
-                format: "%d %B, %Y",
+                format: '%Y-%m-%d',
                 date: "$expiry",
                 timezone: "UTC",
               },
@@ -117,8 +117,8 @@ const invoiceController = {
         data: {
           message: "Invoices Found",
           invoices: invoices,
-          totalAmount: totalAmount,
-          pendingAmount: pendingAmount,
+          totalAmount: parseFloat(totalAmount.toFixed(2)),
+          pendingAmount: Number(pendingAmount.toFixed(2)),
         },
       });
     } catch (error) {
@@ -255,31 +255,82 @@ const invoiceController = {
 
   // ...................... export csv ...........................
   async exportCsv(req, res) {
+    let { id } = req.params;
+
+    let query;
+    if (id) {
+      query = { userId: id, ...req.body };
+    } else {
+      query = { ...req.body };
+    }
+
     try {
       console.log("in export csv");
-      const invoices = await Export.find({}, "amount invoiceId post")
-        .populate({
-          path: "post",
-          populate: {
-            path: "userId",
-            model: "paymentMethods", // Replace 'paymentMethods' with your actual Mongoose model name for payment methods
-            // select: "paymentMethod", // Specify the field(s) you want to select from the paymentMethods collection
+      const pipeline = [
+        { $match: query },
+        {
+          $lookup: {
+            from: "posts", // Replace with your actual posts collection name
+            localField: "post", // Field in videoExport collection
+            foreignField: "_id",
+            as: "postDetails",
           },
-        })
-        .lean();
+        },
+        {
+          $unwind: "$postDetails",
+        },
+        {
+          $lookup: {
+            from: "users", // Replace with your actual users collection name
+            localField: "postDetails.userId", // Field in posts collection
+            foreignField: "_id",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $lookup: {
+            from: "paymentMethods", // Replace with your actual payment methods collection name
+            localField: "userDetails._id", // Field in users collection
+            foreignField: "userId", // Field in paymentMethods collection
+            as: "paymentDetails",
+          },
+        },
+        {
+          $unwind: "$paymentDetails",
+        },
+        {
+          $project: {
+            sortCode: "$paymentDetails.sortCode",
+            accName: "$paymentDetails.accName",
+            accNumber: "$paymentDetails.accNumber",
+            amount: "$amount",
+            invoiceId: "$invoiceId",
+            bacsCode: "$paymentDetails.bacsCode",
+          },
+        },
+      ];
 
-      const headings = [["amount", "invoiceId"]];
+      // Execute the aggregation pipeline
+      const invoices = await Export.aggregate(pipeline);
+      console.log("results are..", invoices);
 
+      // Create a new workbook and a worksheet from the invoices JSON data
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(invoices, {
-        origin: "A2",
+        origin: "A1", // Start from the first cell
         skipHeader: true,
       });
 
-      XLSX.utils.sheet_add_aoa(ws, headings, { origin: "A1" });
+      // Append the worksheet to the workbook
       XLSX.utils.book_append_sheet(wb, ws, "Invoices");
 
+      // Write the workbook to a buffer as a CSV file
       const buffer = XLSX.write(wb, { bookType: "csv", type: "buffer" });
+
+      // Set the response header to prompt a file download
       res.attachment("Invoices.csv");
       return res.send(buffer);
     } catch (error) {

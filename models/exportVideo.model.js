@@ -18,11 +18,11 @@ const exportVideoSchema = new Schema({
   },
   fileSize: {
     type: String,
-    required: true,
+    // required: true,
   },
   duration: {
     type: Number,
-    required: true,
+    // required: true,
   },
   format: {
     type: String,

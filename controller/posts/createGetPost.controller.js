@@ -84,6 +84,8 @@ async  getUserPostWithTime(req, res) {
               video: '$video',
               date: '$date',
               thumbnail: '$thumbnail',
+              mention: "$mention",
+              tags:"$tags"
             }
           }
         }

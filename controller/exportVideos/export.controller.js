@@ -5,20 +5,20 @@ const path = require("path");
 const exporttController = {
   async createExport(req, res) {
     let exporttData = req.body;
-    const { size } = req.metadata;
-    const { fileUrl, videoFormat, videoCodec } = req;
+    console.log("body is", req.body)
+    // const { size } = req.metadata;
+    // const { fileUrl, videoFormat, videoCodec } = req;
 
-    // If you want to log size in other units
-    const sizeInKB = size / 1024;
-    const sizeInMB = sizeInKB / 1024;
-    exporttData.exportedFile = fileUrl;
-    exporttData.fileSize = sizeInMB;
-    exporttData.codec = videoCodec;
-    exporttData.format = videoFormat;
-
-    const exportt = new Export(exporttData);
+    // // If you want to log size in other units
+    // const sizeInKB = size / 1024;
+    // const sizeInMB = sizeInKB / 1024;
+    // exporttData.exportedFile = fileUrl;
+    // exporttData.fileSize = sizeInMB;
+    // exporttData.codec = videoCodec;
+    // exporttData.format = videoFormat
 
     try {
+      const exportt = new Export(exporttData);
       exportt.save();
       res.status(200).send({
         message: "video exported successfully",

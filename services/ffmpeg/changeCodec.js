@@ -77,7 +77,7 @@ const changeCodec = (videoUrl, videoFormat, codec, outputFilePath) => {
 
     return new Promise((resolve, reject) => {
         ffmpeg(videoUrl)
-            // .withOutputFormat(videoFormat)
+            .withOutputFormat(videoFormat)
             
             .videoCodec(vcodec)
             .outputOptions(options)
