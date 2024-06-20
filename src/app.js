@@ -12,11 +12,11 @@ const session = require("express-session");
 const path = require("path");
 const ffmpeg = require('fluent-ffmpeg');
 // Set the paths for ffmpeg and ffprobe
-const ffmpegPath = path.resolve(__dirname, '../ffmpeg-2024-06-13-git-0060a368b1-full_build/bin/ffmpeg.exe');
-const ffprobePath = path.resolve(__dirname, '../ffmpeg-2024-06-13-git-0060a368b1-full_build/bin/ffprobe.exe');
+// const ffmpegPath = path.resolve(__dirname, '../ffmpeg-2024-06-13-git-0060a368b1-full_build/bin/ffmpeg.exe');
+// const ffprobePath = path.resolve(__dirname, '../ffmpeg-2024-06-13-git-0060a368b1-full_build/bin/ffprobe.exe');
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
+// ffmpeg.setFfmpegPath(ffmpegPath);
+// ffmpeg.setFfprobePath(ffprobePath);
 
 class App {
   constructor() {
