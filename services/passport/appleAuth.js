@@ -1,7 +1,12 @@
+
+const passport = require("passport");
+const fs = require('fs');
+const path = require('path');
 const AppleStrategy = require('@nicokaiser/passport-apple').Strategy;
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/user.model'); // Adjust the path according to your project structure
+// const p8File = require("../../configurations/AuthKey_26JLSMUV95.p8")
 
 dotenv.config();
 
@@ -12,7 +17,7 @@ passport.use(
       teamID: process.env.APPLE_TEAM_ID,
       keyID: process.env.APPLE_KEY_ID,
       key: fs.readFileSync(
-        path.join(__dirname, './config/AuthKey_67FHCH3CU7.p8')
+        path.join(__dirname, '../../configurations/AuthKey_26JLSMUV95.p8')
       ),
       callbackURL: process.env.APPLE_CALLBACK_URL,
       scope: ['email'],
@@ -22,38 +27,13 @@ passport.use(
       const { id, email } = profile;
 
       User.findOne({
-        $and: [{ appleToken: { $exists: true } }, { appleToken: id }, { email }],
+        $and: [{ appleToken: { $exists: true } },{ email }],
       })
         .then((user) => {
           if (user !== null) {
             return cb(null, user);
           }
-          stripe.addNewUser(email).then((customer) => {
-            // create user
-            const userBody = {
-              email,
-              name: email.split('@')[0],
-              appleToken: id,
-              customerId: customer.id,
-              isVerified: true
-            };
-            User.create(userBody)
-              .then((user) => {
-                // send welcome email
-                sendEmail({
-                  userID: user._id.toString(),
-                  templateName: 'welcome',
-                  data: {
-                    userName: user.name
-                  }
-                }).catch((error) => {
-                  logger.warn({ error }, 'Error sending welcome email');
-                });
-
-                cb(null, user);
-              })
-              .catch((err) => cb(err, null));
-          });
+         
         })
         .catch((err) => cb(err, null));
     })

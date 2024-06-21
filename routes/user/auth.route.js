@@ -72,17 +72,18 @@ headRouter.get('/facebook/callback',
 headRouter.get('/apple',
   passport.authenticate('apple'));
 
-headRouter.post('/apple/callback',
-  express.urlencoded(),
-  passport.authenticate('apple', { failureRedirect: '/login' }),
-  (req, res) => {
-     // Generate JWT token
-     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: '1h'
-    });
-    // Successful authentication, redirect home.
-    res.redirect(`${process.env.CLIENT_URL_SUCCESS}?token=${token}`);
-  });
+  headRouter.get('/apple/callback',
+    express.urlencoded(),
+    passport.authenticate('apple', { failureRedirect: '/login' }),
+    (req, res) => {
+      // Generate JWT token if authentication is successful
+      const token = jwt.sign({ id: req.user.id }, process.env.SESSION_SECRET, {
+        expiresIn: '1h'
+      });
+      res.redirect(`${process.env.CLIENT_URL_SUCCESS}?token=${token}`);
+    }
+  );
+  
 
 
 module.exports =  headRouter;

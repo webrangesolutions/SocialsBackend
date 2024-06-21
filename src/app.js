@@ -6,6 +6,7 @@ const initSocket = require("../routes/socket");
 const passport = require("passport");
 const passportGoogleSetup = require('../services/passport/googleAuth');
 const passportMetaSetup = require('../services/passport/metaAuth');
+const passportAppleSetup = require('../services/passport/appleAuth');
 const http = require("http");
 const mongoose = require("mongoose");
 const session = require("express-session");
