@@ -36,37 +36,23 @@ headRouter.get("/logout", (req, res) => {
 
 // meta
 headRouter.get('/facebook',
-  passport.authenticate('facebook', { scope: ['email'] }) // Ensure 'email' scope is requested
+  passport.authenticate('facebook',  { scope: ["profile", "email"] }) // Ensure 'email' scope is requested
 );
 
 headRouter.get('/facebook/callback',
-  (req, res, next) => {
-    passport.authenticate('facebook', (err, user, info) => {
-      if (err) {
-        console.error("Error during authentication:", err);
-        return res.redirect(process.env.CLIENT_URL_FAILURE);
-      }
-      if (!user) {
-        return res.redirect(process.env.CLIENT_URL_FAILURE);
-      }
-      req.logIn(user, async (err) => {
-        if (err) {
-          console.error("Error logging in user:", err);
-          return res.redirect(process.env.CLIENT_URL_FAILURE);
-        }
-
-        // Generate JWT token
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-          expiresIn: '1h'
-        });
-
-        // Redirect with token (you might want to handle this on the client side)
-        res.redirect(`${process.env.CLIENT_URL_SUCCESS}?token=${token}`);
+    passport.authenticate('facebook', {
+      successRedirect: process.env.CLIENT_URL_SUCCESS,
+      failureRedirect: process.env.CLIENT_URL_FAILURE,
+    }),
+    (req, res) => {
+      // Successful authentication
+      const user = req.user;
+      res.status(200).send({
+        message: user ? "User exist" : "User donot exist",
+        user: user? user : {}
       });
-    })(req, res, next);
-  }
-);
-
+    }
+  );
 
 // apple
 headRouter.get('/apple',

@@ -10,27 +10,20 @@ dotenv.config();
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: process.env.FACEBOOK_CALLBACK_URL
+    callbackURL: process.env.FACEBOOK_CALLBACK_URL,
+    scope: ["profile", "email"],
+      passReqToCallback: true,
   },
-  async function(accessToken, refreshToken, profile, cb) {
+  async (req, accessToken, refreshToken, profile, done) => {
     try {
       let user = await User.findOne({ facebookId: profile.id });
-      if (!user) {
-        // Create a new user if one doesn't exist
-        user = await User.create({
-          facebookId: profile.id,
-          name: profile.displayName,
-          // Add other fields as necessary
-        });
-      }
-      return cb(null, user);
+      return done(null, user);
     } catch (err) {
-      console.error("Error in Facebook Strategy callback:", err);
-      return cb(err, null);
+      return done(err, null);
     }
   }
-));
-
+)
+);
 passport.serializeUser((user, done) => {
   done(null, user.id); // Serialize user ID
 });

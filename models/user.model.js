@@ -7,6 +7,16 @@ const userSchema = new Schema({
     unique: true,
     sparse: true
   },
+  facebookId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  appleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   name: {
     type: String,
     required: true,
