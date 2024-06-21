@@ -36,23 +36,22 @@ headRouter.get("/logout", (req, res) => {
 
 // meta
 headRouter.get('/facebook',
-  passport.authenticate('facebook',  { scope: ["profile", "email"] }) // Ensure 'email' scope is requested
+  passport.authenticate('facebook', { scope: ["profile", "email"] })
 );
 
 headRouter.get('/facebook/callback',
-    passport.authenticate('facebook', {
-      successRedirect: process.env.CLIENT_URL_SUCCESS,
-      failureRedirect: process.env.CLIENT_URL_FAILURE,
-    }),
-    (req, res) => {
-      // Successful authentication
-      const user = req.user;
-      res.status(200).send({
-        message: user ? "User exist" : "User donot exist",
-        user: user? user : {}
-      });
-    }
-  );
+  passport.authenticate('facebook', {
+    failureRedirect: process.env.CLIENT_URL_FAILURE,
+  }),
+  (req, res) => {
+    const user = req.user;
+    console.log("user is", user, "req is", req);
+    res.status(200).send({
+      message: user ? "User registered" : "User does not exist",
+      user: user ? user : {}
+    });
+  }
+);
 
 // apple
 headRouter.get('/apple',

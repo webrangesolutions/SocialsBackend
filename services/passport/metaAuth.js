@@ -12,28 +12,36 @@ passport.use(new FacebookStrategy({
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     callbackURL: process.env.FACEBOOK_CALLBACK_URL,
     scope: ["profile", "email"],
-      passReqToCallback: true,
+    passReqToCallback: true,
   },
   async (req, accessToken, refreshToken, profile, done) => {
     try {
       let user = await User.findOne({ facebookId: profile.id });
+      if (!user) {
+        // If user does not exist, create a new user object
+        user = new User({
+          facebookId: profile.id,
+          name: profile.displayName,
+          email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
+        });
+        await user.save(); // Save the new user to the database
+      }
       return done(null, user);
     } catch (err) {
       return done(err, null);
     }
   }
-)
-);
+));
+
 passport.serializeUser((user, done) => {
-  done(null, user.id); // Serialize user ID
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
-    done(null, user); // Deserialize user by ID
+    done(null, user);
   } catch (err) {
     done(err, null);
   }
 });
-
