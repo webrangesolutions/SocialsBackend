@@ -12,6 +12,7 @@ const Joi = require("@hapi/joi");
 const registerValidationSchema = Joi.object({
   name: Joi.string().min(3).required(),
   googleId: Joi.string().min(3),
+  facebookId: Joi.string().min(3),
   email: Joi.string().required(),
   password: Joi.string().min(3),
 });
