@@ -1,77 +1,144 @@
-const ffmpeg = require('fluent-ffmpeg');
-const fs = require('fs');
-const path = require('path');
+let ffmpeg = require("ffmpeg");
+const https = require("https");
+const path = require("path");
+const fs = require("fs");
 
-// Set the paths for ffmpeg and ffprobe
-const ffmpegPath = path.resolve(__dirname, '../../ffmpeg-2024-06-13-git-0060a368b1-full_build/bin/ffmpeg.exe');
-const ffprobePath = path.resolve(__dirname, '../../ffmpeg-2024-06-13-git-0060a368b1-full_build/bin/ffprobe.exe');
+const {
+  uploadFileToFirebase,
+} = require("../../services/firebase/Firebase_post");
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
+const extractFileName = (url) => {
+  // Create a URL object from the string
+  const urlObj = new URL(url);
+
+  // Extract the pathname from the URL
+  const pathname = urlObj.pathname;
+
+  // Get the last part of the pathname after the last slash
+  const lastPart = pathname.substring(pathname.lastIndexOf("/") + 1);
+
+  // Decode the percent-encoded characters and return the filename
+  return decodeURIComponent(lastPart);
+};
+
+const downloadFile = (url, dest) => {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+    https
+      .get(url, (response) => {
+        if (response.statusCode !== 200) {
+          reject(`Failed to get '${url}' (${response.statusCode})`);
+          return;
+        }
+
+        response.pipe(file);
+
+        file.on("finish", () => {
+          file.close(resolve);
+        });
+      })
+      .on("error", (err) => {
+        fs.unlink(dest, () => reject(err.message));
+      });
+  });
+};
 
 const changeFormat = async (file, format, res) => {
+  const fileName = extractFileName(file).split("/")[1];
+  const localFilePath = path.join(__dirname, "temp", fileName);
+  const outputFilePath = path.join(__dirname, `output.${format}`);
+
+  // fs.unlink(outputFilePath, (err) => {
+  //   if (err)
+  //     console.error("Failed to delete local file:", err);
+  // });
+
   try {
-    const inputFilePath = file;
-    const outputFile = 'output.' + format;
+    downloadFile(file, localFilePath).then(() => {
+      try {
+        var process = new ffmpeg(localFilePath);
+        process.then(
+          function (video) {
+            console.log("File downloaded:", localFilePath);
+            video
+              .setVideoFormat(format)
+              .save(outputFilePath, function (error, file) {
+                if (!error) {
+                  const firebaseUrl = uploadFileToFirebase(
+                    outputFilePath,
+                    "output." + format
+                  )
+                    .then((file) => {
+                      res.status(200).send({
+                        success: true,
+                        videoUrl: file,
+                      });
 
-    console.log('Converting', path.extname(file), 'to', format);
+                      fs.unlink(outputFilePath, (err) => {
+                        if (err)
+                          console.error("Failed to delete local file:", err);
+                      });
 
-    // // Check if the input file exists
-    // if (!fs.existsSync(inputFilePath)) {
-    //   throw new Error('Input file does not exist');
-    // }
+                      fs.unlink(localFilePath, (err) => {
+                        if (err)
+                          console.error("Failed to delete local file:", err);
+                      });
+                    })
+                    .catch((err) => {
+                      res.status(400).send({
+                        success: false,
+                        videoUrl: null,
+                      });
 
-    // Convert MXF to MOV using FFmpeg's basic mode
-    await new Promise((resolve, reject) => {
-      ffmpeg(inputFilePath)
-        .outputOptions(['-c:v libx264', '-c:a aac']) // Properly format the options
-        .withOutputFormat(format)
-        .on('start', (commandLine) => {
-          console.log('Spawned FFmpeg with command:', commandLine);
-        })
-        .on('progress', (progress) => {
-          console.log('Processing:', progress);
-        })
-        .on('end', () => {
-          console.log('Conversion to MOV completed');
-          res.download(outputFile, (err) => {
-            if (err) throw err;
-            fs.unlink(outputFile, (err) => {
-              if (err) throw err;
-              console.log('Output file deleted');
-            });
-            fs.unlink(inputFilePath, (err) => {
-              if (err) throw err;
-              console.log('Input file deleted');
-            });
-          });
-          resolve();
-        })
-        .on('error', (err, stdout, stderr) => {
-          console.error('Error occurred during conversion:', err.message);
-          console.error('FFmpeg stdout:', stdout);
-          console.error('FFmpeg stderr:', stderr);
-          if (!res.headersSent) {
-            res.status(500).json({
+                      fs.unlink(outputFilePath, (err) => {
+                        if (err)
+                          console.error("Failed to delete local file:", err);
+                      });
+
+                      fs.unlink(localFilePath, (err) => {
+                        if (err)
+                          console.error("Failed to delete local file:", err);
+                      });
+                    });
+
+                  console.log("Video file: " + file);
+                } else {
+                  console.log("error is", error);
+                  res.status(400).send({
+                    success: false,
+                    videoUrl: null,
+                    error:error
+                  });
+                }
+              });
+          },
+          function (err) {
+            console.log("Error: " + err);
+            res.status(400).send({
               success: false,
-              error: 'Error occurred during video conversion',
-              ffmpegError: err.message,
-              ffmpegStdout: stdout,
-              ffmpegStderr: stderr,
+              videoUrl: null,
+              error:err
             });
           }
-          reject(err);
-        })
-        .save(outputFile);
+        );
+      } catch (e) {
+        console.log(e.code);
+        console.log(e.msg);
+        res.status(400).send({
+          success: false,
+          videoUrl: null,
+          error:e.msg
+        });
+      }
     });
-  } catch (error) {
-    console.error('Error:', error.message);
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: error.message,
-      });
-    }
+  } catch (e) {
+    console.log(e.code);
+    console.log(e.msg);
+     res.status(400).send({
+          success: false,
+          videoUrl: null,
+          error:e.msg
+        });
   }
 };
 
