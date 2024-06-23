@@ -19,6 +19,8 @@ postRouter.post('/createPost', upload.fields([
 
 postRouter.get('/userPost/:id?', postController.getUserPost);
 postRouter.get('/userPostGroupedWithTime/:id?', postController.getUserPostWithTime);
+postRouter.get('/getPostToSearch', postController.getSearchedItems);
+postRouter.get('/searchPost/:area?/:username?/:mention?/:tags?', postController.searchPost);
 
 postRouter.get('/proxy-video', postController.proxyController);
 

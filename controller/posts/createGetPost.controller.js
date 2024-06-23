@@ -1,4 +1,5 @@
 const Post = require("../../models/post.model");
+const User = require("../../models/user.model");
 
 const postController = {
   async createPost(req, res, next) {
@@ -50,6 +51,75 @@ const postController = {
       } catch (error) {
         res.status(500).send({ message: error.message });
       }
+},
+
+async getSearchedItems(req, res) {
+  try {
+    const pipeline = [
+      {
+        $lookup: {
+          from: "users", // The collection to join
+          localField: "userId", // The field from the input documents
+          foreignField: "_id", // The field from the documents of the "from" collection
+          as: "user", // Output array field
+        },
+      },
+      {
+        $unwind: "$user", // Deconstructs the array field from the lookup stage
+      },
+      {
+        $group: {
+          _id: null,
+          uniqueAreas: { $addToSet: "$area" },
+          uniqueMentions: { $addToSet: "$mention" },
+          uniqueTags: { $addToSet: "$tags" },
+          usernames: { $addToSet: "$user.name" },
+          totalPosts: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          uniqueAreas: {
+            $filter: {
+              input: "$uniqueAreas",
+              as: "area",
+              cond: { $ne: ["$$area", null] },
+            },
+          },
+          uniqueMentions: {
+            $reduce: {
+              input: "$uniqueMentions",
+              initialValue: [],
+              in: { $setUnion: ["$$value", "$$this"] },
+            },
+          },
+          uniqueTags: {
+            $reduce: {
+              input: "$uniqueTags",
+              initialValue: [],
+              in: { $setUnion: ["$$value", "$$this"] },
+            },
+          },
+          usernames: 1,
+          totalPosts: 1,
+        },
+      },
+    ];
+
+    const result = await Post.aggregate(pipeline).exec();
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        message: "Post Found",
+        ...result[0],
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching posts:", error); // Log any errors that occur
+    res.status(500).json({ success: false, message: error.message });
+  }
 },
 
 async  getUserPostWithTime(req, res) {
@@ -130,14 +200,119 @@ async  getUserPostWithTime(req, res) {
       }
     ]);
 
-    console.log('Results:', results); // Log the results to see what's returned
-
     res.status(200).json({
       success: true,
       data: {
         message: 'Posts Found',
         totalGroups: results.length,
         groups: results
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching posts:', error); // Log any errors that occur
+    res.status(500).json({ success: false, message: error.message });
+  }
+},
+
+async searchPost(req, res) {
+  const { area, mention, tags, username } = req.params;
+
+  console.log( ".. params tags ...", req.params)
+
+  try {
+    // Initialize the query object
+    let query = {};
+
+    // Add filters to the query object if they exist in the request parameters
+    if (area != 'false') {query.area = area};
+    if (mention && mention != 'false') query.mention = { $in: mention.split(",") };
+    if (tags && tags != 'false') query.tags = { $in: tags.split(",") };
+    if (username != 'false') {
+      const users = await User.find({ name: new RegExp(username, 'i') });
+      const userIds = users.map(user => user._id);
+      query.userId = { $in: userIds };
+    }
+    let idCounter = 1; 
+
+    // Aggregate posts based on the query
+    const results = await Post.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: 'users', // Collection to join with
+          localField: 'userId', // Field from the input documents
+          foreignField: '_id', // Field from the documents of the 'users' collection
+          as: 'user' // Output array field
+        }
+      },
+      { $unwind: '$user' }, // Deconstructs the 'user' array
+      {
+        $group: {
+          _id: {
+            year: { $year: '$date' },
+            month: { $month: '$date' },
+            day: { $dayOfMonth: '$date' },
+            hour: { $hour: '$date' }
+          },
+          totalPosts: { $sum: 1 },
+          posts: {
+            $push: {
+              _id: '$_id',
+              video: '$video',
+              date: '$date',
+              thumbnail: '$thumbnail',
+              mention: "$mention",
+              tags:"$tags"
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          id: { $toString: idCounter++ } // Increment idCounter for each group
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          id: 1,
+          date: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: {
+                $dateFromParts: {
+                  year: '$_id.year',
+                  month: '$_id.month',
+                  day: '$_id.day'
+                }
+              }
+            }
+          },
+          time: {
+            $dateToString: {
+              format: '%H:%M',
+              date: {
+                $dateFromParts: {
+                  year: '$_id.year',
+                  month: '$_id.month',
+                  day: '$_id.day',
+                  hour: '$_id.hour'
+                }
+              }
+            }
+          },
+          totalPosts: 1,
+          posts: 1
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Posts Found',
+        totalPosts: results.length,
+        posts: results
       }
     });
   } catch (error) {
