@@ -8,7 +8,9 @@ const os = require("os");
 const path = require("path");
 
 const memoryStorage = multer.memoryStorage();
-const upload = multer({ storage: memoryStorage });
+const upload = multer({ storage: memoryStorage,
+  limits: { fileSize: 100 * 1024 * 1024 } // 100 MB
+   });
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
