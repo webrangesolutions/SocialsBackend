@@ -15,7 +15,9 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload =  multer({ storage: memoryStorage, limits: { fileSize: 100 * 1024 * 1024 } // 100 MB }); // Temporary storage for uploaded files
+const upload =  multer({ storage: storage, 
+  limits: { fileSize: 100 * 1024 * 1024 } // 100 MB 
+  }); // Temporary storage for uploaded files
 
 formatRouter.put('/changeFormat',  formatController.changeFormat);
 formatRouter.put('/changeFormatToProres', upload.single('inputFile'), formatController.changeFormatToProres);
