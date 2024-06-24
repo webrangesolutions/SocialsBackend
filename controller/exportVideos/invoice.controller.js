@@ -259,11 +259,21 @@ const invoiceController = {
 
     let query;
     if (id) {
-      query = { userId: id, ...req.body };
+      query = { invoiceId: id, ...req.body };
     } else {
       query = { ...req.body };
     }
+  
+    console.log("query is", query);
 
+    Export.find(query)
+    .then((data) => {
+      console.log("abc is", data);
+    })
+    .catch((error) => {
+      console.error("Error finding data:", error);
+    });
+  
     try {
       console.log("in export csv");
       const pipeline = [
@@ -311,25 +321,47 @@ const invoiceController = {
             bacsCode: "$paymentDetails.bacsCode",
           },
         },
+        {
+          $group: {
+            _id: "$invoiceId",
+            sortCode: { $first: "$sortCode" },
+            accName: { $first: "$accName" },
+            accNumber: { $first: "$accNumber" },
+            amount: { $first: "$amount" },
+            invoiceId: { $first: "$invoiceId" },
+            bacsCode: { $first: "$bacsCode" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            sortCode: 1,
+            accName: 1,
+            accNumber: 1,
+            amount: 1,
+            invoiceId: 1,
+            bacsCode: 1,
+          },
+        },
       ];
-
+  
       // Execute the aggregation pipeline
       const invoices = await Export.aggregate(pipeline);
       console.log("results are..", invoices);
-
+  
       // Create a new workbook and a worksheet from the invoices JSON data
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(invoices, {
         origin: "A1", // Start from the first cell
-        skipHeader: true,
+        header: ["sortCode", "accName", "accNumber", "amount", "invoiceId", "bacsCode"], // Specify headers
       });
-
+  
       // Append the worksheet to the workbook
       XLSX.utils.book_append_sheet(wb, ws, "Invoices");
-
+  
       // Write the workbook to a buffer as a CSV file
       const buffer = XLSX.write(wb, { bookType: "csv", type: "buffer" });
-
+  
       // Set the response header to prompt a file download
       res.attachment("Invoices.csv");
       return res.send(buffer);
