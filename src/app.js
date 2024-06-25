@@ -13,11 +13,11 @@ const session = require("express-session");
 const path = require("path");
 const ffmpeg = require('fluent-ffmpeg');
 // Set the paths for ffmpeg and ffprobe
-const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
-const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
+// const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
+// const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
+// ffmpeg.setFfmpegPath(ffmpegPath);
+// ffmpeg.setFfprobePath(ffprobePath);
 
 const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
 
