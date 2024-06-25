@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require("path");
 const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
-
+//nothing
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
