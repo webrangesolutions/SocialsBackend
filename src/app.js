@@ -24,7 +24,7 @@ class App {
       withCredentials: true,
       transports: ["websocket", "polling"],
       cors: {
-        origin: ["https://socials-tau.vercel.app/","*"],
+        origin: ["https://socials-tau.vercel.app/",'https://backend.vupop.io/clip/trimmedVideo/',"*"],
       },
     });
     this.PORT = process.env.PORT || 8080;
