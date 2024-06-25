@@ -14,7 +14,7 @@ const ffmpeg = require('fluent-ffmpeg');
 
 // ffmpeg.setFfmpegPath(ffmpegPath);
 // ffmpeg.setFfprobePath(ffprobePath);
-// const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
+const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
