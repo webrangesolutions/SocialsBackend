@@ -3,7 +3,7 @@ const { ref, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage } = require('../../configurations/FirebaseServiceAccountKey');
 
 const memoryStorage = multer.memoryStorage();
-const upload = multer({ storage: memoryStorage,
+const upload = multer({ storage: memoryStorage, 
   limits: { fileSize: 100 * 1024 * 1024 } // 100 MB
    });
 
