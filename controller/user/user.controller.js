@@ -85,6 +85,8 @@ const userController = {
         try {
           const {id} = req.params
 
+          await User.createIndexes([{ key: { email: 1 }, unique: true }]);
+
           let query
               if (id) {
                 query = { _id: id, ...req.body };
@@ -107,6 +109,7 @@ const userController = {
                   .send({ success: false, data: { error: err.message } });
               });
         } catch (error) {
+          console.log(error)
           return res.status(404).send({
             success: false,
             data: { error: error.response },

@@ -1,7 +1,8 @@
-let ffmpeg = require("ffmpeg");
+// let ffmpeg = require("ffmpeg");
 const https = require("https");
 const path = require("path");
 const fs = require("fs");
+var ffmpeg = require("fluent-ffmpeg");
 
 const {
   uploadFileToFirebase,
@@ -56,89 +57,162 @@ const changeFormat = async (file, format, res) => {
   try {
     downloadFile(file, localFilePath).then(() => {
       try {
-        var process = new ffmpeg(localFilePath);
-        process.then(
-          function (video) {
-            console.log("File downloaded:", localFilePath);
-            video
-              .setVideoFormat(format)
-              .save(outputFilePath, function (error, file) {
-                if (!error) {
-                  const firebaseUrl = uploadFileToFirebase(
-                    outputFilePath,
-                    "output." + format
-                  )
-                    .then((file) => {
-                      res.status(200).send({
-                        success: true,
-                        videoUrl: file,
-                      });
+        //make sure you set the correct path to your video file
+        var proc = new ffmpeg({ source: localFilePath, nolog: true });
+        // proc.setFfmpegPath(
+        //   "D:\\documents\\React\\backendd\\socials\\socials-backend\\ffmpeg\\bin"
+        // );
 
-                      fs.unlink(outputFilePath, (err) => {
-                        if (err)
-                          console.error("Failed to delete local file:", err);
-                      });
+        proc
 
-                      fs.unlink(localFilePath, (err) => {
-                        if (err)
-                          console.error("Failed to delete local file:", err);
-                      });
-                    })
-                    .catch((err) => {
-                      res.status(400).send({
-                        success: false,
-                        videoUrl: null,
-                      });
+          // set output format to force
+          .toFormat(format)
 
-                      fs.unlink(outputFilePath, (err) => {
-                        if (err)
-                          console.error("Failed to delete local file:", err);
-                      });
+          // setup event handlers
+          .on("end", function () {
+            console.log("file has been converted successfully");
+          })
 
-                      fs.unlink(localFilePath, (err) => {
-                        if (err)
-                          console.error("Failed to delete local file:", err);
-                      });
-                    });
-
-                  console.log("Video file: " + file);
-                } else {
-                  console.log("error is", error);
-                  res.status(400).send({
-                    success: false,
-                    videoUrl: null,
-                    error:error
-                  });
-                }
-              });
-          },
-          function (err) {
-            console.log("Error: " + err);
-            res.status(400).send({
+          .on("error", function (err) {
+            console.log("an error happened: " + err.message);
+            res.status(404).send({
               success: false,
-              videoUrl: null,
-              error:err
+              videoUrl: err.message,
             });
-          }
-        );
+          })
+
+          // save to file <-- the new file I want -->
+          .saveToFile(outputFilePath, function (err) {
+            if (err) {
+              res.status(404).send({
+                success: false,
+                videoUrl: err,
+              });
+            }else{
+              const firebaseUrl = uploadFileToFirebase(
+                            outputFilePath,
+                            "output." + format
+                          )
+                            .then((file) => {
+                              res.status(200).send({
+                                success: true,
+                                videoUrl: file,
+                              });
+        
+                              fs.unlink(outputFilePath, (err) => {
+                                if (err)
+                                  console.error("Failed to delete local file:", err);
+                              });
+        
+                              fs.unlink(localFilePath, (err) => {
+                                if (err)
+                                  console.error("Failed to delete local file:", err);
+                              });
+                            })
+                            .catch((err) => {
+                              res.status(400).send({
+                                success: false,
+                                videoUrl: null,
+                              });
+        
+                              fs.unlink(outputFilePath, (err) => {
+                                if (err)
+                                  console.error("Failed to delete local file:", err);
+                              });
+        
+                              fs.unlink(localFilePath, (err) => {
+                                if (err)
+                                  console.error("Failed to delete local file:", err);
+                              });
+                            });
+        
+                          console.log("Video file: " + file);
+                        } 
+          });
+
+        // var process = new ffmpeg(localFilePath);
+        // process.then(
+        //   function (video) {
+        //     console.log("File downloaded:", localFilePath);
+        //     video
+        //       .setVideoFormat(format)
+        //       .save(outputFilePath, function (error, file) {
+        //         if (!error) {
+        //           const firebaseUrl = uploadFileToFirebase(
+        //             outputFilePath,
+        //             "output." + format
+        //           )
+        //             .then((file) => {
+        //               res.status(200).send({
+        //                 success: true,
+        //                 videoUrl: file,
+        //               });
+
+        //               fs.unlink(outputFilePath, (err) => {
+        //                 if (err)
+        //                   console.error("Failed to delete local file:", err);
+        //               });
+
+        //               fs.unlink(localFilePath, (err) => {
+        //                 if (err)
+        //                   console.error("Failed to delete local file:", err);
+        //               });
+        //             })
+        //             .catch((err) => {
+        //               res.status(400).send({
+        //                 success: false,
+        //                 videoUrl: null,
+        //               });
+
+        //               fs.unlink(outputFilePath, (err) => {
+        //                 if (err)
+        //                   console.error("Failed to delete local file:", err);
+        //               });
+
+        //               fs.unlink(localFilePath, (err) => {
+        //                 if (err)
+        //                   console.error("Failed to delete local file:", err);
+        //               });
+        //             });
+
+        //           console.log("Video file: " + file);
+        //         } else {
+        //           console.log("error is", error);
+        //           res.status(400).send({
+        //             success: false,
+        //             videoUrl: null,
+        //             error:error
+        //           });
+        //         }
+        //       });
+        //   },
+        //   function (err) {
+        //     console.log("Error: " + err);
+        //     res.status(400).send({
+        //       success: false,
+        //       videoUrl: null,
+        //       error:err
+        //     });
+        //   }
+        // );
       } catch (e) {
         console.log(e.code);
         console.log(e.msg);
         res.status(400).send({
           success: false,
           videoUrl: null,
-          error:e.msg
+          error: e.msg,
         });
       }
     });
   } catch (e) {
     console.log(e.code);
     console.log(e.msg);
-     res.status(400).send({
-          success: false,
-          videoUrl: null,
-          error:e.msg
-        });
+    res.status(400).send({
+      success: false,
+      videoUrl: null,
+      error: e.msg,
+    });
   }
 };
 

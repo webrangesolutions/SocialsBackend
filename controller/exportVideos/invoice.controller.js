@@ -275,7 +275,11 @@ const invoiceController = {
     });
   
     try {
-      console.log("in export csv");
+      // Debug: Find raw data
+      const rawData = await Export.find(query);
+      console.log("Raw data:", rawData);
+  
+      console.log("In export csv");
       const pipeline = [
         { $match: query },
         {
@@ -286,9 +290,7 @@ const invoiceController = {
             as: "postDetails",
           },
         },
-        {
-          $unwind: "$postDetails",
-        },
+        { $unwind: "$postDetails" },
         {
           $lookup: {
             from: "users", // Replace with your actual users collection name
@@ -297,9 +299,7 @@ const invoiceController = {
             as: "userDetails",
           },
         },
-        {
-          $unwind: "$userDetails",
-        },
+        { $unwind: "$userDetails" },
         {
           $lookup: {
             from: "paymentMethods", // Replace with your actual payment methods collection name
@@ -308,9 +308,7 @@ const invoiceController = {
             as: "paymentDetails",
           },
         },
-        {
-          $unwind: "$paymentDetails",
-        },
+        { $unwind: "$paymentDetails" },
         {
           $project: {
             sortCode: "$paymentDetails.sortCode",
@@ -347,7 +345,12 @@ const invoiceController = {
   
       // Execute the aggregation pipeline
       const invoices = await Export.aggregate(pipeline);
-      console.log("results are..", invoices);
+      console.log("Aggregated results:", invoices);
+  
+      // Check if invoices are found
+      if (invoices.length === 0) {
+        return res.status(404).send({ message: "No invoices found." });
+      }
   
       // Create a new workbook and a worksheet from the invoices JSON data
       const wb = XLSX.utils.book_new();
@@ -366,6 +369,7 @@ const invoiceController = {
       res.attachment("Invoices.csv");
       return res.send(buffer);
     } catch (error) {
+      console.error("Error during export:", error);
       return res.status(500).send({ message: error.message });
     }
   },
