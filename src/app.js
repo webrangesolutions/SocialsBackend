@@ -3,55 +3,26 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const router = require("../routes/main.route");
 const initSocket = require("../routes/socket");
-const passport = require("passport");
-const passportGoogleSetup = require('../services/passport/googleAuth');
-const passportMetaSetup = require('../services/passport/metaAuth');
-const passportAppleSetup = require('../services/passport/appleAuth');
 const http = require("http");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require("path");
-const ffmpeg = require('fluent-ffmpeg');
-// Set the paths for ffmpeg and ffprobe
-// const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
-// const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
-
-// ffmpeg.setFfmpegPath(ffmpegPath);
-// ffmpeg.setFfprobePath(ffprobePath);
-
 const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
-
 
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
     this.app = express();
     this.http = http.Server(this.app);
-    this.io = require("socket.io")(this.http, {
-      withCredentials: true,
-    transports: ["websocket", "polling"],
-    cors: {
-        origin: (origin, callback) => {
-            // Allow requests with no origin (like mobile apps or curl requests)
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
-                return callback(null, true);
-            } else {
-                return callback(new Error("Not allowed by CORS"));
-            }
-        },
-    },
-    });
-    this.PORT = process.env.PORT || 8080;
-
     this.initMiddleware();
     this.connectToMongoDB();
     this.initRoutes();
+    this.initSocketIO();
+    this.PORT = process.env.PORT || 8080;
   }
 
   initMiddleware() {
-    this.app.use(cors());
+    // Use bodyParser for JSON and URL-encoded data
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
@@ -63,9 +34,18 @@ class App {
       cookie: { secure: false } // Set to true if using HTTPS
     }));
 
-    // Initialize Passport and restore authentication state, if any, from the session
-    this.app.use(passport.initialize());
-    this.app.use(passport.session());
+    // Initialize CORS for all routes
+    this.app.use((req, res, next) => {
+      const { origin } = req.headers;
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+        res.setHeader("Access-Control-Allow-Origin", origin || "*");
+      }
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+      );
+      next();
+    });
   }
 
   connectToMongoDB() {
@@ -92,7 +72,26 @@ class App {
 
     this.app.use(express.static(publicPath));
     this.app.use("/", router);
-    initSocket(this.io);
+  }
+
+  initSocketIO() {
+    const io = require("socket.io")(this.http, {
+      cors: {
+        origin: (origin, callback) => {
+          // Allow requests with no origin (like mobile apps or curl requests)
+          if (!origin) return callback(null, true);
+
+          if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+            return callback(null, true);
+          } else {
+            return callback(new Error("Not allowed by CORS"));
+          }
+        },
+        credentials: true,
+        transports: ["websocket", "polling"],
+      },
+    });
+    initSocket(io);
   }
 
   createServer() {
