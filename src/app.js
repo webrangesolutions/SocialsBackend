@@ -19,6 +19,9 @@ const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
+const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
+
+
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
@@ -26,10 +29,19 @@ class App {
     this.http = http.Server(this.app);
     this.io = require("socket.io")(this.http, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
-      cors: {
-        origin: "*",
-      },
+    transports: ["websocket", "polling"],
+    cors: {
+        origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+                return callback(null, true);
+            } else {
+                return callback(new Error("Not allowed by CORS"));
+            }
+        },
+    },
     });
     this.PORT = process.env.PORT || 8080;
 
