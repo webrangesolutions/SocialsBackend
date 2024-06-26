@@ -46,11 +46,13 @@ const downloadFile = (url, dest) => {
 
 const changeFormat = async (file, format, res) => {
   try {
+
+    console.log("file is ...", file, "... format is ...", format," ... ")
     const fileName = extractFileName(file).split("/")[1];
     const localFilePath = path.join(__dirname, "temp", fileName);
     const outputFilePath = path.join(__dirname, "temp", `output.${format}`);
 
-    console.log("local...",localFilePath,"...output...", outputFilePath )
+    // console.log("local...",localFilePath,"...output...", outputFilePath )
 
     // Ensure the temp directory exists
     if (!fs.existsSync(path.join(__dirname, "temp"))) {
@@ -59,7 +61,7 @@ const changeFormat = async (file, format, res) => {
 
     // Download the file
     await downloadFile(file, localFilePath);
-    console.log(`Downloaded file to: ${localFilePath}`);
+    // console.log(`Downloaded file to: ${localFilePath}`);
 
     // Convert the file format
     ffmpeg(localFilePath)

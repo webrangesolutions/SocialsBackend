@@ -4,7 +4,10 @@ const processVideo = require("../../services/ffmpeg/changeCodec");
 
 const videoConversionController = {
   async changeFormat(req, res) {
+    console.log("in change format")
     try {
+
+      console.log("in try")
       const inputFilePath = req.body.file; // Use req.file.path provided by multer
       const format = req.body.format;
       console.log("files are", req.body.file);
