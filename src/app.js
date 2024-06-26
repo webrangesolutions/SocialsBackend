@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require("path");
 const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 // Set the paths for ffmpeg and ffprobe
 // const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
 // const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');

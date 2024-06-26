@@ -4,22 +4,35 @@ const processVideo = require("../../services/ffmpeg/changeCodec");
 
 const videoConversionController = {
   async changeFormat(req, res) {
-    console.log("in change format")
+    console.log("in change format");
     try {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+      );
+      res.header(
+        "Access-Control-Allow-Methods",
+        "PUT, POST, GET, DELETE, OPTIONS"
+      );
+      // next();
 
-      console.log("in try")
+      console.log("in try");
       const inputFilePath = req.body.file; // Use req.file.path provided by multer
       const format = req.body.format;
       console.log("files are", req.body.file);
       changeFormat(inputFilePath, format, res, {
         send: console.log,
-        status: (code) => ({ send: (msg) => {console.log(`Status ${code}: ${msg}`)
-          res.status(400).send({
-            success: false,
-            videoUrl: null,
-            error:msg
-          });
-        } })
+        status: (code) => ({
+          send: (msg) => {
+            console.log(`Status ${code}: ${msg}`);
+            res.status(400).send({
+              success: false,
+              videoUrl: null,
+              error: msg,
+            });
+          },
+        }),
       });
       // await changeFormat(inputFilePath, format, res);
     } catch (error) {
@@ -35,8 +48,8 @@ const videoConversionController = {
 
   async changeFormatToProres(req, res) {
     try {
-      const {videoUrl, videoFormat} = req.body
-      console.log(req.body)
+      const { videoUrl, videoFormat } = req.body;
+      console.log(req.body);
       await changeFormatToProres(videoUrl, videoFormat, res);
     } catch (error) {
       console.error("Error after headers sent:", error);
@@ -51,8 +64,17 @@ const videoConversionController = {
 
   async changeCodec(req, res) {
     try {
-      const {file,  codec} = req.body
-      console.log(req.body)
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+      );
+      res.header(
+        "Access-Control-Allow-Methods",
+        "PUT, POST, GET, DELETE, OPTIONS"
+      );
+      const { file, codec } = req.body;
+      console.log(req.body);
       await processVideo(file, codec, res);
     } catch (error) {
       console.error("Error after headers sent:", error);
