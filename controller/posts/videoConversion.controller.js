@@ -7,7 +7,15 @@ const videoConversionController = {
     console.log("in change format");
     try {
       // next();
-
+res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+      );
+      res.header(
+        "Access-Control-Allow-Methods",
+        "PUT, POST, GET, DELETE, OPTIONS"
+      );
       console.log("in try");
       const inputFilePath = req.body.file; // Use req.file.path provided by multer
       const format = req.body.format;
@@ -55,6 +63,15 @@ const videoConversionController = {
 
   async changeCodec(req, res) {
     try {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+      );
+      res.header(
+        "Access-Control-Allow-Methods",
+        "PUT, POST, GET, DELETE, OPTIONS"
+      );
       const { file, codec } = req.body;
       console.log(req.body);
       await processVideo(file, codec, res);
