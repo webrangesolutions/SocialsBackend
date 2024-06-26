@@ -26,6 +26,9 @@ class App {
       transports: ["websocket", "polling"],
       cors: {
         origin: ["https://socials-tau.vercel.app/",
+          'https://backend.vupop.io/clip/trimmedVideo/',
+          'https://backend.vupop.io/format/changeFormat/',
+          'https://backend.vupop.io/format/changeCodec/'
           ,"*"],
       },
     });
