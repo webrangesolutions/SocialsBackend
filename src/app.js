@@ -15,7 +15,7 @@ ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 
 // ffmpeg.setFfmpegPath(ffmpegPath);
 // ffmpeg.setFfprobePath(ffprobePath);
-const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
+const allowedOrigins = ["https://socials-tau.vercel.app","https://backend.vupop.io/clip/","https://backend.vupop.io/format/", "*"];
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
@@ -87,13 +87,6 @@ class App {
   }
 
   initRoutes() {
-
-      this.app.use((req, res, next) => {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-      res.header("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, OPTIONS");
-      next();
-    });
     const folderPath = __dirname;
     const publicPath = path.join(folderPath, "..", "public");
 
