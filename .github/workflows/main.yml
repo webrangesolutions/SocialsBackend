@@ -39,16 +39,16 @@ jobs:
           echo "CLIENT_URL_SUCCESS=${{ secrets.CLIENT_URL_SUCCESS }}" >> .env
           echo "CLIENT_URL_FAILURE=${{ secrets.CLIENT_URL_FAILURE }}" >> .env
           echo "CALLBACK_URL=${{ secrets.CALLBACK_URL }}" >> .env
-          echo "apiKey=${{ secrets.API_KEY }}" >> .env
-          echo "authDomain=${{ secrets.AUTH_DOMAIN }}" >> .env
-          echo "projectId=${{ secrets.PROJECT_ID }}" >> .env
-          echo "storageBucket=${{ secrets.STORAGE_BUCKET }}" >> .env
-          echo "messagingSenderId=${{ secrets.MESSAGING_SENDER_ID }}" >> .env
-          echo "appId=${{ secrets.APP_ID }}" >> .env
-          echo "measurementId=${{ secrets.MEASUREMENT_ID }}" >> .env
+          echo "apiKey=${{ secrets.apiKey }}" >> .env
+          echo "authDomain=${{ secrets.authDomain }}" >> .env
+          echo "projectId=${{ secrets.projectId }}" >> .env
+          echo "storageBucket=${{ secrets.storageBucket }}" >> .env
+          echo "messagingSenderId=${{ secrets.messagingSenderId }}" >> .env
+          echo "appId=${{ secrets.appId }}" >> .env
+          echo "measurementId=${{ secrets.measurementId }}" >> .env
           echo "MAIL_API_KEY=${{ secrets.MAIL_API_KEY }}" >> .env
           echo "EMAIL=${{ secrets.EMAIL }}" >> .env
-          echo "Email_Link=${{ secrets.EMAIL_LINK }}" >> .env
+          echo "Email_Link=${{ secrets.Email_Link }}" >> .env
           
   
 
