@@ -15,7 +15,7 @@ ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 
 // ffmpeg.setFfmpegPath(ffmpegPath);
 // ffmpeg.setFfprobePath(ffprobePath);
-const allowedOrigins = ["https://socials-tau.vercel.app","https://backend.vupop.io/clip/","https://backend.vupop.io/format/", "*"];
+const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
