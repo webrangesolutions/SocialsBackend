@@ -11,7 +11,6 @@ const ffmpeg = require('fluent-ffmpeg');
 // Set the paths for ffmpeg and ffprobe
 // const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
 // const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
-//nothing
 
 // ffmpeg.setFfmpegPath(ffmpegPath);
 // ffmpeg.setFfprobePath(ffprobePath);
