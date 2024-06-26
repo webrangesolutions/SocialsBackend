@@ -6,15 +6,6 @@ const videoConversionController = {
   async changeFormat(req, res) {
     console.log("in change format");
     try {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept"
-      );
-      res.header(
-        "Access-Control-Allow-Methods",
-        "PUT, POST, GET, DELETE, OPTIONS"
-      );
       // next();
 
       console.log("in try");
@@ -64,15 +55,6 @@ const videoConversionController = {
 
   async changeCodec(req, res) {
     try {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept"
-      );
-      res.header(
-        "Access-Control-Allow-Methods",
-        "PUT, POST, GET, DELETE, OPTIONS"
-      );
       const { file, codec } = req.body;
       console.log(req.body);
       await processVideo(file, codec, res);

@@ -8,14 +8,14 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require("path");
 const ffmpeg = require('fluent-ffmpeg');
-// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 // Set the paths for ffmpeg and ffprobe
 // const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
 // const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
 
 // ffmpeg.setFfmpegPath(ffmpegPath);
 // ffmpeg.setFfprobePath(ffprobePath);
-const allowedOrigins = ["https://socials-tau.vercel.app","https://backend.vupop.io/clip/","https://backend.vupop.io/format/", "*"];
+const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
 class App {
   constructor() {
     dotenv.config(); // Load environment variables at the beginning
