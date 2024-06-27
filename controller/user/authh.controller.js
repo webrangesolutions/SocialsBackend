@@ -15,6 +15,7 @@ const registerValidationSchema = Joi.object({
   facebookId: Joi.string().min(3),
   email: Joi.string().required(),
   password: Joi.string().min(3),
+  termAndCondition: Joi.boolean(),
 });
 
 //validation for login data
@@ -99,6 +100,7 @@ const userController = {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(userData.password, salt);
       }
+      if(user.termAndCondition == true){
   
       const registeredUser = await user.save();
       const token = jwt.sign(
@@ -116,6 +118,14 @@ const userController = {
           _id: registeredUser._id,
         },
       });
+    }else{
+      return res.status(404).json({
+        success: false,
+        data: {
+          error: "Please accept terms and conditions",
+        },
+      });
+    }
     } catch (error) {
       console.error("Error registering user:", error);
       return res.status(500).json({
