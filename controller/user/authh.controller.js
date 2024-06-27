@@ -63,62 +63,67 @@ const userController = {
         success: false,
         data: { error: error.details.map((detail) => detail.message) },
       });
-    } else {
-      let userData = req.body;
-      if (!userData.googleId) {
-        userData.googleId = "";
-      }
+    }
+  
+    let userData = req.body;
+    if (!userData.googleId) {
+      userData.googleId = undefined; // Ensure googleId is undefined if not provided
+    }
+  
+    try {
       const emailExists = await User.findOne({ email: userData.email });
-      let token
-      if(emailExists){
-        token = jwt.sign(
+  
+      if (emailExists) {
+        const token = jwt.sign(
           { _id: emailExists._id },
           process.env.TOKEN_SECRET
         );
-      }
-      
-
-      if (emailExists) {
+  
         return res.status(200).json({
           success: false,
-          data: { message: "This email already exists. Try logging in",
+          data: {
+            message: "This email already exists. Try logging in",
             data: {
               authToken: token,
               name: emailExists.name,
               email: emailExists.email,
               _id: emailExists._id,
             },
-           },
+          },
         });
-      } else {
-        const user = new User(userData);
-        if (userData.password) {
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
-
-        try {
-          const registeredUser = await user.save();
-          token = jwt.sign(
-            { _id: registeredUser._id },
-            process.env.TOKEN_SECRET
-          );
-          
-          res.status(200).send({
-            message: "User registered successfully",
-            data: {
-              authToken: token,
-              name: registeredUser.name,
-              email: registeredUser.email,
-              _id: registeredUser._id,
-            },
-          });
-        } catch (error) {
-          res.status(500).send({ message: error.message });
-        }
       }
+  
+      const user = new User(userData);
+  
+      if (userData.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(userData.password, salt);
+      }
+  
+      const registeredUser = await user.save();
+      const token = jwt.sign(
+        { _id: registeredUser._id },
+        process.env.TOKEN_SECRET
+      );
+  
+      return res.status(200).json({
+        success: true,
+        data: {
+          message: "User registered successfully",
+          authToken: token,
+          name: registeredUser.name,
+          email: registeredUser.email,
+          _id: registeredUser._id,
+        },
+      });
+    } catch (error) {
+      console.error("Error registering user:", error);
+      return res.status(500).json({
+        success: false,
+        data: { error: "Failed to register user" },
+      });
     }
-  },
+  },  
 
   async registerUsingApple(req, res) {
     try {

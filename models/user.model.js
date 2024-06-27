@@ -51,7 +51,13 @@ const userSchema = new Schema({
   date:{
     type: Date,
     default: Date.now
+  },
+  termAndCondition:{
+    type: Boolean,
+    default: false
   }
 });
+
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("user", userSchema, "users");

@@ -36,9 +36,23 @@ const postSchema = new Schema({
   },
   mention: {
     type: Array,
+    required: true,
+    validate: {
+      validator: function(array) {
+        return array.length > 0;
+      },
+      message: "The mention array must contain at least one item.",
+    },
   },
   tags: {
     type: Array,
+    required: true,
+    validate: {
+      validator: function(array) {
+        return array.length > 0;
+      },
+      message: "The tags array must contain at least one item.",
+    },
   },
   video: {
     type: String,
