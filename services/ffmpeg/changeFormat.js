@@ -65,6 +65,7 @@ const changeFormat = async (file, format, res) => {
 
     // Convert the file format
     ffmpeg(localFilePath)
+  
       .output(outputFilePath)
       .outputFormat(format)
       .on('start', function (commandLine) {
