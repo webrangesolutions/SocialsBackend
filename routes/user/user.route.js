@@ -1,5 +1,7 @@
 const express = require("express");
 const userController = require("../../controller/user/user.controller");
+
+const deleteController = require("../../controller/user/deleteUser.controller");
 const emailController = require("../../controller/user/sendMail.controller");
 const {upload, uploadFileToFirebase} = require("../../services/firebase/Firebase_SignStorage")
 
@@ -20,6 +22,8 @@ userRouter.put('/updateImage/:id', upload.single('file'), async (req, res, next)
 userRouter.get('/image/:id', userController.getUserImage);
 userRouter.get('/getUser/:id?', userController.getUser);
 userRouter.put('/updateUser/:id', userController.updateUser);
+
+userRouter.delete('/deleteUser/:id', deleteController.deleteUser);
 
 userRouter.post('/sendEmail', emailController.sendLinkToEmail);
 userRouter.put('/updateDuration/:id', emailController.updateDuration);
