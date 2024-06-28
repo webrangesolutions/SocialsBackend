@@ -52,6 +52,10 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now
   },
+  isDeleted:{
+    type: Boolean,
+    default: false
+  },
   termAndCondition:{
     type: Boolean,
     default: false
