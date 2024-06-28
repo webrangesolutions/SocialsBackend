@@ -8,28 +8,28 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require("path");
 const ffmpeg = require('fluent-ffmpeg');
+
+dotenv.config(); // Load environment variables at the beginning
+
 ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-// Set the paths for ffmpeg and ffprobe
-// const ffmpegPath = path.resolve(__dirname, '../ffmpeg/bin/ffmpeg.exe');
-// const ffprobePath = path.resolve(__dirname, '../ffmpeg/bin/ffprobe.exe');
-//nothing
-// ffmpeg.setFfmpegPath(ffmpegPath);
-// ffmpeg.setFfprobePath(ffprobePath);
-const allowedOrigins = ["https://socials-tau.vercel.app", "*"];
+
+const allowedOrigins = [
+  "https://socials-tau.vercel.app",
+  "https://backend.vupop.io",
+  "*"
+];
+
 class App {
   constructor() {
-    dotenv.config(); // Load environment variables at the beginning
     this.app = express();
     this.http = http.Server(this.app);
     this.io = require("socket.io")(this.http, {
-      withCredentials: true,
-      transports: ["websocket", "polling"],
       cors: {
-        origin: ["https://socials-tau.vercel.app/",
-          'https://backend.vupop.io/clip/trimmedVideo/',
-          'https://backend.vupop.io/format/changeFormat/',
-          'https://backend.vupop.io/format/changeCodec/'
-          ,"*"],
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true,
+        transports: ["websocket", "polling"]
       },
     });
     this.PORT = process.env.PORT || 8080;
@@ -38,15 +38,12 @@ class App {
     this.connectToMongoDB();
     this.initRoutes();
     this.initSocketIO();
-    this.PORT = process.env.PORT || 8080;
   }
 
   initMiddleware() {
-    // Use bodyParser for JSON and URL-encoded data
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
-    // Configure session middleware
     this.app.use(session({
       secret: process.env.SESSION_SECRET || 'your-secret-key',
       resave: false,
@@ -54,16 +51,22 @@ class App {
       cookie: { secure: false } // Set to true if using HTTPS
     }));
 
-    // Initialize CORS for all routes
+    this.app.use(cors({
+      origin: (origin, callback) => {
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes("*") || !origin) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
+    }));
+
     this.app.use((req, res, next) => {
-      const { origin } = req.headers;
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
-        res.setHeader("Access-Control-Allow-Origin", origin || "*");
-      }
-      res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept"
-      );
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
       next();
     });
   }
@@ -95,22 +98,7 @@ class App {
   }
 
   initSocketIO() {
-    const io = require("socket.io")(this.http, {
-      cors: {
-        origin: (origin, callback) => {
-          // Allow requests with no origin (like mobile apps or curl requests)
-          if (!origin) return callback(null, true);
-
-          if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
-            return callback(null, true);
-          } else {
-            return callback(new Error("Not allowed by CORS"));
-          }
-        },
-        credentials: true,
-        transports: ["websocket", "polling"],
-      },
-    });
+    const io = this.io;
     initSocket(io);
   }
 
