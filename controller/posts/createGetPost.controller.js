@@ -122,7 +122,7 @@ async getSearchedItems(req, res) {
   }
 },
 
-async  getUserPostWithTime(req, res) {
+async getUserPostWithTime(req, res) {
   let { id } = req.params;
 
   try {
@@ -155,9 +155,17 @@ async  getUserPostWithTime(req, res) {
               date: '$date',
               thumbnail: '$thumbnail',
               mention: "$mention",
-              tags:"$tags"
+              tags: "$tags"
             }
           }
+        }
+      },
+      {
+        $sort: {
+          '_id.year': -1,
+          '_id.month': -1,
+          '_id.day': -1,
+          '_id.hour': -1
         }
       },
       {
@@ -265,6 +273,14 @@ async searchPost(req, res) {
               tags:"$tags"
             }
           }
+        }
+      },
+      {
+        $sort: {
+          '_id.year': 1,
+          '_id.month': 1,
+          '_id.day': 1,
+          '_id.hour': 1
         }
       },
       {
