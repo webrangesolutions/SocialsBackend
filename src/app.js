@@ -9,7 +9,7 @@ const session = require("express-session");
 const path = require("path");
 const ffmpeg = require('fluent-ffmpeg');
 
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+ffmpeg.setFfmpegPath('/usr/ffmpeg-7/ffmpeg-7');
 // // Set the paths for ffmpeg and ffprobe
 // const ffmpegPath = path.resolve('/usr/bin/ffmpeg/ffmpeg.exe');
 // const ffprobePath = path.resolve('/usr/bin/ffmpeg/ffprobe.exe');
