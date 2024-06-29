@@ -34,7 +34,7 @@ class App {
           ,'*'],
       },
     });
-    this.PORT = process.env.PORT || 8080;
+    // this.PORT = process.env.PORT || 8080;
 
     this.initMiddleware();
     this.connectToMongoDB();
