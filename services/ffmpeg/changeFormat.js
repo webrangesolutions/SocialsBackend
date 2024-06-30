@@ -70,7 +70,7 @@ const changeFormat = async (file, format, scanType,res) => {
       .outputFormat(format)
       .outputOptions([
         '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
-        '-vf', 'fps=50', // Set frame rate to 50
+        // '-vf', 'fps=50', // Set frame rate to 50
         '-s', '720x576', // Set resolution to PAL standard
         '-pix_fmt', 'yuv420p',
         '-c:v', 'libx264',
