@@ -1,19 +1,22 @@
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
+const fetch = require('node-fetch');
+const os = require('os');
 const { uploadFileToFirebase } = require('../../services/firebase/Firebase_post');
 
 const processVideo = async (videoUrl, videoFormat, start, duration, req, res) => {
     try {
         // Temporary directory to store the downloaded video
-        const tempDir = await fs.mkdtemp(path.resolve(process.cwd(), 'video-'));
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'video-'));
         const localFilePath = path.join(tempDir, 'inputVideo.mp4');
 
         // Download the video file locally
         await downloadVideo(videoUrl, localFilePath);
 
         // Temporary directory to store the trimmed video
-        const tempTrimDir = await fs.mkdtemp(path.resolve(process.cwd(), 'trimmedVideo-'));
+        const tempTrimDir = await fs.mkdtemp(path.join(os.tmpdir(), 'trimmedVideo-'));
         const outputFilePath = path.join(tempTrimDir, 'trimmedVideo.mp4');
 
         // Process the video clip
@@ -48,7 +51,7 @@ const processVideo = async (videoUrl, videoFormat, start, duration, req, res) =>
 const downloadVideo = async (videoUrl, localFilePath) => {
     const response = await fetch(videoUrl); // Assuming fetch is available
     const videoStream = response.body;
-    const fileStream = fs.createWriteStream(localFilePath);
+    const fileStream = fsSync.createWriteStream(localFilePath);
 
     return new Promise((resolve, reject) => {
         videoStream.pipe(fileStream);
@@ -73,7 +76,7 @@ const cutVideo = (inputFilePath, videoFormat, startTime, duration, outputFilePat
     return new Promise((resolve, reject) => {
         ffmpeg(inputFilePath)
             .setStartTime(startTime)
-            .duration(duration - startTime)
+            .duration(duration)
             .format(videoFormat)
             .videoCodec(vcodec)
             .outputOptions(options)
@@ -95,6 +98,7 @@ const cutVideo = (inputFilePath, videoFormat, startTime, duration, outputFilePat
 };
 
 module.exports = processVideo;
+
 
 
 
