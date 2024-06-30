@@ -46,7 +46,6 @@
 //   }
 // };
 
-
 // // Function to change codec and save to outputFilePath
 // const changeCodec = (videoUrl, videoFormat, codec, outputFilePath) => {
 //     let vcodec, options;
@@ -78,7 +77,7 @@
 //     return new Promise((resolve, reject) => {
 //         ffmpeg(videoUrl)
 //             .withOutputFormat(videoFormat)
-            
+
 //             .videoCodec(vcodec)
 //             .outputOptions(options)
 //             .on('start', (commandLine) => {
@@ -100,10 +99,8 @@
 
 // module.exports = processVideo;
 
-
-
 // let ffmpeg = require("ffmpeg");
-const ffmpeg = require('fluent-ffmpeg');
+const ffmpeg = require("fluent-ffmpeg");
 const https = require("https");
 const path = require("path");
 const fs = require("fs");
@@ -148,7 +145,7 @@ const downloadFile = (url, dest) => {
   });
 };
 
-const changeCodec = async (file, codec,scanType, res) => {
+const changeCodec = async (file, codec, scanType, res) => {
   const fileName = extractFileName(file).split("/")[1];
   const localFilePath = path.join(__dirname, "temp", fileName);
   const outputFilePath = path.join(__dirname, `temp/Output${fileName}`);
@@ -158,57 +155,148 @@ const changeCodec = async (file, codec,scanType, res) => {
   if (codec === "hevc") {
     vcodec = "libx265";
     options = [
-      '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
-      '-vf', 'fps=50', // Set frame rate to 50
-      '-s', '720x576', // Set resolution to PAL standard
-      '-pix_fmt', 'yuv420p',
-      '-b:v', '2M',
-      '-c:a', 'aac',
-      '-b:a', '128k',
-      '-ac', '2',
-      '-ar', '48000',
-      "-c:v", "libx265",
-      "-preset", "slow",
-      "-crf", "28"
-
+      "-vf",
+      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
+      "-vf",
+      "fps=50", // Set frame rate to 50
+      "-s",
+      "720x576", // Set resolution to PAL standard
+      "-pix_fmt",
+      "yuv420p",
+      "-b:v",
+      "2M",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-ac",
+      "2",
+      "-ar",
+      "48000",
+      "-c:v",
+      "libx265",
+      "-preset",
+      "slow",
+      "-crf",
+      "28",
     ];
-  } else if (codec === 'h264') {
-    vcodec = 'libx264';
+  } else if (codec === "h264") {
+    vcodec = "libx264";
     options = [
-      '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
-      '-vf', 'fps=50', // Set frame rate to 50
-      '-s', '720x576', // Set resolution to PAL standard
-      '-pix_fmt', 'yuv420p',
-      '-b:v', '2M',
-      '-c:a', 'aac',
-      '-b:a', '128k',
-      '-ac', '2',
-      '-ar', '48000',
-      "-c:v", "libx264",
-      "-preset", "slow",
-      "-crf", "23"
+      "-vf",
+      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
+      "-vf",
+      "fps=50", // Set frame rate to 50
+      "-s",
+      "720x576", // Set resolution to PAL standard
+      "-pix_fmt",
+      "yuv420p",
+      "-b:v",
+      "2M",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-ac",
+      "2",
+      "-ar",
+      "48000",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "slow",
+      "-crf",
+      "23",
     ];
-  } else if (codec === 'av1') {
-    vcodec = 'libaom-av1';
+  } else if (codec === "av1") {
+    vcodec = "libaom-av1";
     options = [
-      '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
+      "-vf",
+      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
       // '-vf', 'fps=50', // Set frame rate to 50
-      '-s', '720x576', // Set resolution to PAL standard
-      '-pix_fmt', 'yuv420p',
-      '-b:v', '2M',
-      '-c:a', 'aac',
-      '-b:a', '128k',
-      '-ac', '2',
-      '-ar', '48000',
-        "-c:v", 'libaom-av1',
-        "-cpu-used", "4",
-        "-b:v", "0",
-        "-crf", "30"
+      "-s",
+      "720x576", // Set resolution to PAL standard
+      "-pix_fmt",
+      "yuv420p",
+      "-b:v",
+      "2M",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-ac",
+      "2",
+      "-ar",
+      "48000",
+      "-c:v",
+      "libaom-av1",
+      "-cpu-used",
+      "4",
+      "-b:v",
+      "0",
+      "-crf",
+      "30",
+    ];
+  } else if (codec === "dnxhd") {
+    vcodec = "dnxhd";
+    options = [
+      "-vf",
+      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
+      // '-vf', 'fps=50', // Set frame rate to 50
+      "-s",
+      "720x576", // Set resolution to PAL standard
+      "-pix_fmt",
+      "yuv420p",
+      "-b:v",
+      "2M",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-ac",
+      "2",
+      "-ar",
+      "48000",
+      "-cpu-used",
+      "4",
+      "-b:v",
+      "0",
+      "-crf",
+      "30",
+    ];
+  } else if (codec === "prores") {
+    vcodec = "prores_ks";
+    options = [
+      "-profile:v",
+      "3",
+      "-vf",
+      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
+      // '-vf', 'fps=50', // Set frame rate to 50
+      "-s",
+      "720x576", // Set resolution to PAL standard
+      "-pix_fmt",
+      "yuv420p",
+      "-b:v",
+      "2M",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-ac",
+      "2",
+      "-ar",
+      "48000",
+      "-cpu-used",
+      "4",
+      "-b:v",
+      "0",
+      "-crf",
+      "30",
     ];
   } else {
     return res.status(400).send({
       success: false,
-      message: "Unsupported codec"
+      message: "Unsupported codec",
     });
   }
 
@@ -220,24 +308,27 @@ const changeCodec = async (file, codec,scanType, res) => {
       ffmpeg(localFilePath)
         .videoCodec(vcodec)
         .outputOptions(options)
-        .on('start', (commandLine) => {
-          console.log('ffmpeg process started with command:', commandLine);
+        .on("start", (commandLine) => {
+          console.log("ffmpeg process started with command:", commandLine);
         })
-        .on('error', (err, stdout, stderr) => {
-          console.error('Error occurred:', err.message);
-          console.error('ffmpeg stdout:', stdout);
-          console.error('ffmpeg stderr:', stderr);
+        .on("error", (err, stdout, stderr) => {
+          console.error("Error occurred:", err.message);
+          console.error("ffmpeg stdout:", stdout);
+          console.error("ffmpeg stderr:", stderr);
           reject(err);
         })
-        .on('end', () => {
-          console.log('Processing done:', outputFilePath);
+        .on("end", () => {
+          console.log("Processing done:", outputFilePath);
           resolve();
         })
         .save(outputFilePath);
     });
 
     console.log(`Uploading file to Firebase: ${outputFilePath}`);
-    const uploadedFile = await uploadFileToFirebase(outputFilePath, `${fileName}`);
+    const uploadedFile = await uploadFileToFirebase(
+      outputFilePath,
+      `${fileName}`
+    );
 
     res.status(200).send({
       success: true,
@@ -245,9 +336,8 @@ const changeCodec = async (file, codec,scanType, res) => {
     });
 
     cleanUpFiles([localFilePath, outputFilePath]);
-
   } catch (error) {
-    console.error('An error occurred: ', error);
+    console.error("An error occurred: ", error);
     res.status(500).send({
       success: false,
       error: error.message,
