@@ -1,17 +1,23 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const { uploadFileToFirebase } = require("../../services/firebase/Firebase_post");
+const { uploadFileToFirebase } = require('../../services/firebase/Firebase_post');
 
 const processVideo = async (videoUrl, videoFormat, start, duration, req, res) => {
     try {
+        // Temporary directory to store the downloaded video
+        const tempDir = await fs.mkdtemp(path.join(fs.realpathSync('.'), 'video-'));
+        const localFilePath = path.join(tempDir, 'inputVideo.mp4');
 
-        // Temporary file to store the trimmed video
-        const tempDir = await fs.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
-        const outputFilePath = path.join(tempDir, 'trimmedVideo.mp4');
+        // Download the video file locally
+        await downloadVideo(videoUrl, localFilePath);
+
+        // Temporary directory to store the trimmed video
+        const tempTrimDir = await fs.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
+        const outputFilePath = path.join(tempTrimDir, 'trimmedVideo.mp4');
 
         // Process the video clip
-        await cutVideo(videoUrl, videoFormat, start, duration, outputFilePath);
+        await cutVideo(localFilePath, videoFormat, start, duration, outputFilePath);
 
         // Upload the trimmed video to Firebase
         const firebaseUrl = await uploadFileToFirebase(outputFilePath, 'trimmedVideo.mp4');
@@ -23,12 +29,12 @@ const processVideo = async (videoUrl, videoFormat, start, duration, req, res) =>
             duration: duration
         });
 
-        // Delete the temporary file
-        try {
-            await fs.promises.rmdir(tempDir, { recursive: true });
-        } catch (deleteErr) {
-            console.error('Error deleting temporary directory:', deleteErr);
-        }
+        // Cleanup: Delete the temporary files
+        await fs.unlink(localFilePath);
+        await fs.unlink(outputFilePath);
+        await fs.rmdir(tempDir);
+        await fs.rmdir(tempTrimDir);
+
     } catch (error) {
         console.error('Error:', error);
         res.status(500).send({
@@ -38,16 +44,34 @@ const processVideo = async (videoUrl, videoFormat, start, duration, req, res) =>
     }
 };
 
+// Download video from URL to localFilePath
+const downloadVideo = async (videoUrl, localFilePath) => {
+    const response = await fetch(videoUrl); // Assuming fetch is available
+    const videoStream = response.body;
+    const fileStream = fs.createWriteStream(localFilePath);
+
+    return new Promise((resolve, reject) => {
+        videoStream.pipe(fileStream);
+        videoStream.on('end', () => {
+            console.log('Video downloaded:', localFilePath);
+            resolve();
+        });
+        videoStream.on('error', (err) => {
+            reject(err);
+        });
+    });
+};
+
 // Cut video and save to outputFilePath
-const cutVideo = (videoUrl, videoFormat, startTime, duration, outputFilePath) => {
+const cutVideo = (inputFilePath, videoFormat, startTime, duration, outputFilePath) => {
     let vcodec = 'libx264';
     let options = [
-        '-c:v libx264', // Use H.264 codec
-        '-preset slow', // Encoding speed (can be ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)
-        '-crf 23' // Constant Rate Factor for quality (lower is better quality, 0 is lossless)
+        '-c:v', 'libx264', // Use H.264 codec
+        '-preset', 'slow', // Encoding speed (can be ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)
+        '-crf', '23' // Constant Rate Factor for quality (lower is better quality, 0 is lossless)
     ];
     return new Promise((resolve, reject) => {
-        ffmpeg(videoUrl)
+        ffmpeg(inputFilePath)
             .setStartTime(startTime)
             .duration(duration - startTime)
             .format(videoFormat)
@@ -71,7 +95,6 @@ const cutVideo = (videoUrl, videoFormat, startTime, duration, outputFilePath) =>
 };
 
 module.exports = processVideo;
-
 
 
 // let ffmpeg = require("ffmpeg");
