@@ -28,8 +28,8 @@ const processVideo = async (
     // const realPath = await fs.realpath(".");
     // const tempTrimDir = await fs.mkdtemp(path.join(realPath, "trimmedVideo-"));
 
-            const tempTrimDir = await fsSync.promises.mkdir(path.join(fsSync.realpathSync('.'), 'trimmedVideo-'));
-    const outputFilePath = path.join(tempTrimDir, "trimmedVideo.mp4");
+    const tempTrimDirPath = await fs.mkdir(path.join(await fs.realpath('.'), 'trimmedVideo'), { recursive: true }).then(() => path.join(await fs.realpath('.'), 'trimmedVideo'));
+    const outputFilePath = path.join(tempTrimDirPath, "trimmedVideo.mp4");
 
     // Process the video clip
     await cutVideo(localFilePath, videoFormat, start, duration, outputFilePath);
