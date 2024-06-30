@@ -33,8 +33,8 @@ const processVideo = async (videoUrl, videoFormat, start, duration, req, res) =>
         });
 
         // Cleanup: Delete the temporary files
-        await fs.unlink(localFilePath);
-        await fs.unlink(outputFilePath);
+       // await fs.unlink(localFilePath);
+       // await fs.unlink(outputFilePath);
         await fs.rmdir(tempDir);
         await fs.rmdir(tempTrimDir);
 
