@@ -18,7 +18,9 @@ const processVideo = async (videoUrl, videoFormat, start, duration, req, res) =>
         // Temporary directory to store the trimmed video
       //  const tempTrimDir = await fs.mkdtemp(path.join(os.tmpdir(), 'trimmedVideo-'));
 
-        const tempTrimDir = await fsSync.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
+      const realPath = await fs.promises.realpath('.');
+      const tempTrimDir = await fs.promises.mkdtemp(path.join(realPath, 'trimmedVideo-'));
+     
         const outputFilePath = path.join(tempTrimDir, 'trimmedVideo.mp4');
 
         // Process the video clip
