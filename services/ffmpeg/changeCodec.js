@@ -1,104 +1,3 @@
-// const fs = require('fs');
-// const path = require('path');
-// const ffmpeg = require('fluent-ffmpeg');
-// const { uploadFileToFirebase } = require("../../services/firebase/Firebase_post");
-
-// const processVideo = async (videoUrl, videoFormat, codec, res) => {
-//   let tempDir;
-
-//   try {
-//       // Validate video URL and format
-//       if (!videoUrl || !videoFormat) {
-//           throw new Error("Missing video URL or format.");
-//       }
-
-//       // Temporary directory to store the trimmed video
-//       tempDir = await fs.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
-//       const outputFilePath = path.join(tempDir, `trimmedVideo.${videoFormat}`);
-
-//       // Process the video clip
-//       await changeCodec(videoUrl, videoFormat, codec, outputFilePath);
-
-//       // Upload the trimmed video to Firebase
-//       const firebaseUrl = await uploadFileToFirebase(outputFilePath, `trimmedVideo.${videoFormat}`);
-
-//       // Send the Firebase video URL as response
-//       res.status(200).send({
-//           success: true,
-//           videoUrl: firebaseUrl,
-//       });
-//   } catch (error) {
-//       console.error('Error:', error);
-//       res.status(500).send({
-//           success: false,
-//           data: { error: error.message },
-//       });
-//   } finally {
-//       // Delete the temporary directory after processing
-//       if (tempDir) {
-//           try {
-//               await fs.promises.rmdir(tempDir, { recursive: true });
-//               console.log('Temporary directory deleted:', tempDir);
-//           } catch (deleteErr) {
-//               console.error('Error deleting temporary directory:', deleteErr);
-//           }
-//       }
-//   }
-// };
-
-// // Function to change codec and save to outputFilePath
-// const changeCodec = (videoUrl, videoFormat, codec, outputFilePath) => {
-//     let vcodec, options;
-
-//     if (codec === "hevc") {
-//         vcodec = "libx265";
-//         options = [
-//             "-c:v", "libx265",    // Use HEVC codec
-//             "-preset", "slow",    // Encoding speed
-//             "-crf", "28"          // Constant Rate Factor for quality
-//         ];
-//     } else if (codec === 'h264') {
-//         vcodec = 'libx264';
-//         options = [
-//             "-c:v", "libx264",    // Use H.264 codec
-//             "-preset", "slow",    // Encoding speed
-//             "-crf", "23"          // Constant Rate Factor for quality
-//         ];
-//     } else if (codec === 'av1') {
-//         vcodec = 'libaom-av1';
-//         options = [
-//             "-c:v", "libaom-av1", // Use AV1 codec
-//             "-cpu-used", "4",     // Set CPU usage
-//             "-b:v", "0",          // Use constant quality mode
-//             "-crf", "30"          // Constant Rate Factor for quality
-//         ];
-//     }
-
-//     return new Promise((resolve, reject) => {
-//         ffmpeg(videoUrl)
-//             .withOutputFormat(videoFormat)
-
-//             .videoCodec(vcodec)
-//             .outputOptions(options)
-//             .on('start', (commandLine) => {
-//                 console.log('ffmpeg process started with command:', commandLine);
-//             })
-//             .on('error', (err, stdout, stderr) => {
-//                 console.error('Error occurred:', err.message);
-//                 console.error('ffmpeg stdout:', stdout);
-//                 console.error('ffmpeg stderr:', stderr);
-//                 reject(err);
-//             })
-//             .on('end', () => {
-//                 console.log('Processing done:', outputFilePath);
-//                 resolve();
-//             })
-//             .save(outputFilePath);
-//     });
-// };
-
-// module.exports = processVideo;
-
 // let ffmpeg = require("ffmpeg");
 const ffmpeg = require("fluent-ffmpeg");
 const https = require("https");
@@ -146,7 +45,10 @@ const downloadFile = (url, dest) => {
 };
 
 const changeCodec = async (file, codec, scanType, res) => {
-  const fileName = extractFileName(file).split("/")[1];
+  let fileName = extractFileName(file).split("/")[1];
+  if(codec == 'prores' || codec == 'dnxhd'){
+    fileName = 'output.mov'
+  }
   const localFilePath = path.join(__dirname, "temp", fileName);
   const outputFilePath = path.join(__dirname, `temp/Output${fileName}`);
 
@@ -213,7 +115,7 @@ const changeCodec = async (file, codec, scanType, res) => {
     options = [
       "-vf",
       scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
-      // '-vf', 'fps=50', // Set frame rate to 50
+      '-vf', 'fps=50', // Set frame rate to 50
       "-s",
       "720x576", // Set resolution to PAL standard
       "-pix_fmt",
@@ -241,14 +143,11 @@ const changeCodec = async (file, codec, scanType, res) => {
     vcodec = "dnxhd";
     options = [
       "-vf",
-      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
-      // '-vf', 'fps=50', // Set frame rate to 50
-      "-s",
-      "720x576", // Set resolution to PAL standard
+      scanType === "Progressive" ? "yadif=1:-1:0,fps=50,scale=720:576:flags=lanczos" : "yadif=0:-1:1,fps=50,scale=720:576:flags=lanczos",
       "-pix_fmt",
-      "yuv420p",
+      "yuv422p", // Use yuv422p for DNxHD
       "-b:v",
-      "2M",
+      "2M", // Adjust bitrate as needed
       "-c:a",
       "aac",
       "-b:a",
@@ -257,42 +156,29 @@ const changeCodec = async (file, codec, scanType, res) => {
       "2",
       "-ar",
       "48000",
-      "-cpu-used",
-      "4",
-      "-b:v",
-      "0",
-      "-crf",
-      "30",
+      "-profile:v",
+      "dnxhr_hq", // Example DNxHD profile, adjust as per your requirement
     ];
+    
   } else if (codec === "prores") {
     vcodec = "prores_ks";
     options = [
-      "-profile:v",
-      "3",
-      "-vf",
-      scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
-      // '-vf', 'fps=50', // Set frame rate to 50
-      "-s",
-      "720x576", // Set resolution to PAL standard
-      "-pix_fmt",
-      "yuv420p",
-      "-b:v",
-      "2M",
-      "-c:a",
-      "aac",
-      "-b:a",
-      "128k",
-      "-ac",
-      "2",
-      "-ar",
-      "48000",
-      "-cpu-used",
-      "4",
-      "-b:v",
-      "0",
-      "-crf",
-      "30",
+      "-profile:v", "3",
+      "-vf", scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1",
+      "-vf", "fps=50",
+      "-s", "720x576",
+      "-pix_fmt", "yuv420p",
+      "-b:v", "2M",
+      "-c:a", "aac",
+      "-b:a", "128k",
+      "-ac", "2", // Number of audio channels
+      "-c:v", "prores_ks",
+      "-ar", "48000",
+      "-cpu-used", "4",
+      "-b:v", "0", // Bitrate for video (set to 0 to use CRF)
+      "-crf", "30", // Constant Rate Factor for quality (if using CRF mode)
     ];
+    
   } else {
     return res.status(400).send({
       success: false,
