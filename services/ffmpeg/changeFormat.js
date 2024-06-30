@@ -49,7 +49,7 @@ const changeFormat = async (file, format, scanType,res) => {
 
     console.log("file is ...", file, "... format is ...", format," ... ")
     const fileName = extractFileName(file).split("/")[1];
-    const localFilePath = path.join(__dirname, "temp", fileName);
+   // const localFilePath = path.join(__dirname, "temp", fileName);
    const tempTrimDir = await fs.promises.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
     const localFilePath = path.join(tempTrimDir, "trimmedVideo.mp4");
 
