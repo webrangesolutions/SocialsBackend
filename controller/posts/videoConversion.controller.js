@@ -11,8 +11,9 @@ const videoConversionController = {
       console.log("in try");
       const inputFilePath = req.body.file; // Use req.file.path provided by multer
       const format = req.body.format;
+      const scanType = req.body.scanType
       console.log("files are", req.body.file);
-      changeFormat(inputFilePath, format, res, {
+      changeFormat(inputFilePath, format,scanType, res, {
         send: console.log,
         status: (code) => ({
           send: (msg) => {
@@ -55,9 +56,9 @@ const videoConversionController = {
 
   async changeCodec(req, res) {
     try {
-      const { file, codec } = req.body;
+      const { file, codec, scanType } = req.body;
       console.log(req.body);
-      await processVideo(file, codec, res);
+      await processVideo(file, codec, scanType, res);
     } catch (error) {
       console.error("Error after headers sent:", error);
       if (!res.headersSent) {

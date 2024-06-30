@@ -44,7 +44,7 @@ const downloadFile = (url, dest) => {
   });
 };
 
-const changeFormat = async (file, format, res) => {
+const changeFormat = async (file, format, scanType,res) => {
   try {
 
     console.log("file is ...", file, "... format is ...", format," ... ")
@@ -68,6 +68,18 @@ const changeFormat = async (file, format, res) => {
   
       .output(outputFilePath)
       .outputFormat(format)
+      .outputOptions([
+        '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
+        '-vf', 'fps=50', // Set frame rate to 50
+        '-s', '720x576', // Set resolution to PAL standard
+        '-pix_fmt', 'yuv420p',
+        '-c:v', 'libx264',
+        '-b:v', '2M',
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-ac', '2',
+        '-ar', '48000'
+      ])
       .on('start', function (commandLine) {
         console.log('Spawned FFmpeg with command: ' + commandLine);
       })

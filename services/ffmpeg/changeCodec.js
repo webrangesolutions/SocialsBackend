@@ -148,7 +148,7 @@ const downloadFile = (url, dest) => {
   });
 };
 
-const changeCodec = async (file, codec, res) => {
+const changeCodec = async (file, codec,scanType, res) => {
   const fileName = extractFileName(file).split("/")[1];
   const localFilePath = path.join(__dirname, "temp", fileName);
   const outputFilePath = path.join(__dirname, `temp/Output${fileName}`);
@@ -158,21 +158,49 @@ const changeCodec = async (file, codec, res) => {
   if (codec === "hevc") {
     vcodec = "libx265";
     options = [
+      '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
+      '-vf', 'fps=50', // Set frame rate to 50
+      '-s', '720x576', // Set resolution to PAL standard
+      '-pix_fmt', 'yuv420p',
+      '-b:v', '2M',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-ac', '2',
+      '-ar', '48000',
       "-c:v", "libx265",
       "-preset", "slow",
       "-crf", "28"
+
     ];
   } else if (codec === 'h264') {
     vcodec = 'libx264';
     options = [
+      '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
+      '-vf', 'fps=50', // Set frame rate to 50
+      '-s', '720x576', // Set resolution to PAL standard
+      '-pix_fmt', 'yuv420p',
+      '-b:v', '2M',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-ac', '2',
+      '-ar', '48000',
       "-c:v", "libx264",
       "-preset", "slow",
       "-crf", "23"
     ];
   } else if (codec === 'av1') {
-    vcodec = 'libdav1d';
+    vcodec = 'libaom-av1';
     options = [
-        "-c:v", "libdav1d",
+      '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
+      '-vf', 'fps=50', // Set frame rate to 50
+      '-s', '720x576', // Set resolution to PAL standard
+      '-pix_fmt', 'yuv420p',
+      '-b:v', '2M',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-ac', '2',
+      '-ar', '48000',
+        "-c:v", 'libaom-av1',
         "-cpu-used", "4",
         "-b:v", "0",
         "-crf", "30"

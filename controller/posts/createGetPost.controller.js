@@ -232,10 +232,10 @@ async searchPost(req, res) {
     let query = {};
 
     // Add filters to the query object if they exist in the request parameters
-    if (area != 'false') {query.area = area};
+    if (area && area != 'false') {query.area = area};
     if (mention && mention != 'false') query.mention = { $in: mention.split(",") };
     if (tags && tags != 'false') query.tags = { $in: tags.split(",") };
-    if (username != 'false') {
+    if (username && username != 'false') {
       const users = await User.find({ name: new RegExp(username, 'i') });
       const userIds = users.map(user => user._id);
       query.userId = { $in: userIds };
