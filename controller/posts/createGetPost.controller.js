@@ -246,15 +246,6 @@ async searchPost(req, res) {
     const results = await Post.aggregate([
       { $match: query },
       {
-        $lookup: {
-          from: 'users', // Collection to join with
-          localField: 'userId', // Field from the input documents
-          foreignField: '_id', // Field from the documents of the 'users' collection
-          as: 'user' // Output array field
-        }
-      },
-      { $unwind: '$user' }, // Deconstructs the 'user' array
-      {
         $group: {
           _id: {
             year: { $year: '$date' },
@@ -270,7 +261,7 @@ async searchPost(req, res) {
               date: '$date',
               thumbnail: '$thumbnail',
               mention: "$mention",
-              tags:"$tags"
+              tags: "$tags"
             }
           }
         }
