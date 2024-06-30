@@ -53,7 +53,7 @@ const changeFormat = async (file, format, scanType,res) => {
 //   const tempTrimDir = path.join(fs.realpathSync('.'), 'trimmedVideo-')
   //  const localFilePath = path.join(tempTrimDir, "trimmedVideo.mp4");
 
-        const tempTrimDirPath = path.join(await fs.realpath('.'), 'trimmedVideo');
+        const tempTrimDirPath = path.join(await fs.realpathSync('.'), 'trimmedVideo');
 
     const localFilePath = path.join(tempTrimDirPath, "trimmedVideo.mp4");
 
