@@ -6,14 +6,14 @@ const { uploadFileToFirebase } = require('../../services/firebase/Firebase_post'
 const processVideo = async (videoUrl, videoFormat, start, duration, req, res) => {
     try {
         // Temporary directory to store the downloaded video
-        const tempDir = await fs.mkdtemp(path.join(fs.realpathSync('.'), 'video-'));
+        const tempDir = await fs.mkdtemp(path.resolve(process.cwd(), 'video-'));
         const localFilePath = path.join(tempDir, 'inputVideo.mp4');
 
         // Download the video file locally
         await downloadVideo(videoUrl, localFilePath);
 
         // Temporary directory to store the trimmed video
-        const tempTrimDir = await fs.mkdtemp(path.join(fs.realpathSync('.'), 'trimmedVideo-'));
+        const tempTrimDir = await fs.mkdtemp(path.resolve(process.cwd(), 'trimmedVideo-'));
         const outputFilePath = path.join(tempTrimDir, 'trimmedVideo.mp4');
 
         // Process the video clip
@@ -95,6 +95,7 @@ const cutVideo = (inputFilePath, videoFormat, startTime, duration, outputFilePat
 };
 
 module.exports = processVideo;
+
 
 
 // let ffmpeg = require("ffmpeg");
