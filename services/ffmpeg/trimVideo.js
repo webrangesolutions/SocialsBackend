@@ -49,10 +49,10 @@ const processVideo = async (
     });
 
     // Cleanup: Delete the temporary files
-    await fs.unlink(localFilePath);
-    await fs.unlink(outputFilePath);
-    await fs.rmdir(tempDir);
-    await fs.rmdir(tempTrimDir);
+   // await fs.unlink(localFilePath);
+  //  await fs.unlink(outputFilePath);
+  //  await fs.rmdir(tempDir);
+  //  await fs.rmdir(tempTrimDir);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({
