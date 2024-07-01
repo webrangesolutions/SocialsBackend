@@ -1,24 +1,14 @@
-// let ffmpeg = require("ffmpeg");
 const https = require("https");
 const path = require("path");
 const fs = require("fs");
 var ffmpeg = require("fluent-ffmpeg");
 
-const {
-  uploadFileToFirebase,
-} = require("../../services/firebase/Firebase_post");
+const { uploadFileToFirebase } = require("../../services/firebase/Firebase_post");
 
 const extractFileName = (url) => {
-  // Create a URL object from the string
   const urlObj = new URL(url);
-
-  // Extract the pathname from the URL
   const pathname = urlObj.pathname;
-
-  // Get the last part of the pathname after the last slash
   const lastPart = pathname.substring(pathname.lastIndexOf("/") + 1);
-
-  // Decode the percent-encoded characters and return the filename
   return decodeURIComponent(lastPart);
 };
 
@@ -51,49 +41,31 @@ const changeFormat = async (file, format, scanType, res) => {
     console.log(date);
     console.log("date is", date);
     console.log("file is ...", file, "... format is ...", format, " ... ");
-    const fileName = extractFileName(file).split("/")[1];
+    const fileName = extractFileName(file);
 
     console.log("file name is ..", fileName);
-    // const localFilePath = path.join(__dirname, "temp", fileName);
-    //   const tempTrimDir = path.join(fs.realpathSync('.'), 'trimmedVideo-')
-    //  const localFilePath = path.join(tempTrimDir, "trimmedVideo.mp4");
 
-    const tempTrimDirPath = path.join(
-      await fs.realpathSync("."),
-      "trimmedVideo"
-    );
+    const tempTrimDirPath = path.join(await fs.realpathSync("."), "trimmedVideo");
+
+    if (!fs.existsSync(tempTrimDirPath)) {
+      fs.mkdirSync(tempTrimDirPath);
+    }
 
     const localFilePath = path.join(tempTrimDirPath, `${date}.mp4`);
-
     const outputFilePath = path.join(__dirname, "temp", `${date}.${format}`);
 
-    // console.log("local...",localFilePath,"...output...", outputFilePath )
-
-    // Ensure the temp directory exists
     if (!fs.existsSync(path.join(__dirname, "temp"))) {
       fs.mkdirSync(path.join(__dirname, "temp"));
     }
 
-    // Download the file
     await downloadFile(file, localFilePath);
-    // console.log(`Downloaded file to: ${localFilePath}`);
 
-    // Convert the file format
     ffmpeg(localFilePath)
       .output(outputFilePath)
       .outputFormat(format)
       .outputOptions([
         "-vf",
-        scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
-        // '-vf', 'fps=50', // Set frame rate to 50
-        // '-s', '720x576', // Set resolution to PAL standard
-        // '-pix_fmt', 'yuv420p',
-        // '-c:v', 'libx264',
-        // '-b:v', '2M',
-        // '-c:a', 'aac',
-        // '-b:a', '128k',
-        // '-ac', '2',
-        // '-ar', '48000'
+        scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1",
       ])
       .on("start", function (commandLine) {
         console.log("Spawned FFmpeg with command: " + commandLine);
@@ -109,10 +81,7 @@ const changeFormat = async (file, format, scanType, res) => {
       .on("end", async function () {
         console.log("Processing finished successfully");
         try {
-          const uploadedFile = await uploadFileToFirebase(
-            outputFilePath,
-            `${date}.${format}`
-          );
+          const uploadedFile = await uploadFileToFirebase(outputFilePath, `${date}.${format}`);
           res.status(200).send({
             success: true,
             videoUrl: uploadedFile,
