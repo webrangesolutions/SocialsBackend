@@ -7,6 +7,10 @@ const emailVerificationSchema = new Schema({
     required: true,
     unique: true
   },
+  name: {
+    type: String,
+    required: true,
+  },
   issueDate:{
     type: Date,
     default: Date.now
