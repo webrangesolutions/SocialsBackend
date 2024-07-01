@@ -34,26 +34,40 @@ const postSchema = new Schema({
     type: String,
     required: true
   },
-  mention: {
-    type: Array,
+ mention: {
+    type: [
+      {
+        type: String,
+        trim: true,
+        minlength: 1, // Ensures each mention is at least 1 character long
+      },
+    ],
     required: true,
     validate: {
       validator: function(array) {
-        return array.length > 0;
+        return array.length > 0 && array.every(mention => mention.trim() !== "");
       },
-      message: "The mention array must contain at least one item.",
+      message: "The mention array must contain at least one non-empty item.",
     },
   },
+
   tags: {
-    type: Array,
+    type: [
+      {
+        type: String,
+        trim: true,
+        minlength: 1, // Ensures each mention is at least 1 character long
+      },
+    ],
     required: true,
     validate: {
       validator: function(array) {
-        return array.length > 0;
+        return array.length > 0 && array.every(mention => mention.trim() !== "");
       },
-      message: "The tags array must contain at least one item.",
+      message: "The mention array must contain at least one non-empty item.",
     },
   },
+
   video: {
     type: String,
     required: true,

@@ -68,6 +68,18 @@ async getSearchedItems(req, res) {
         $unwind: "$user", // Deconstructs the array field from the lookup stage
       },
       {
+        $unwind: {
+          path: "$mention",
+          preserveNullAndEmptyArrays: true, // If there are no mentions, keep the document
+        },
+      },
+      {
+        $unwind: {
+          path: "$tags",
+          preserveNullAndEmptyArrays: true, // If there are no tags, keep the document
+        },
+      },
+      {
         $group: {
           _id: null,
           uniqueAreas: { $addToSet: "$area" },
@@ -88,17 +100,17 @@ async getSearchedItems(req, res) {
             },
           },
           uniqueMentions: {
-            $reduce: {
+            $filter: {
               input: "$uniqueMentions",
-              initialValue: [],
-              in: { $setUnion: ["$$value", "$$this"] },
+              as: "mention",
+              cond: { $ne: ["$$mention", null] },
             },
           },
           uniqueTags: {
-            $reduce: {
+            $filter: {
               input: "$uniqueTags",
-              initialValue: [],
-              in: { $setUnion: ["$$value", "$$this"] },
+              as: "tag",
+              cond: { $ne: ["$$tag", null] },
             },
           },
           usernames: 1,

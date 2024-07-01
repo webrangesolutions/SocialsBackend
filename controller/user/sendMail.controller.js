@@ -1,5 +1,6 @@
 const mailService = require("../../services/mailGrid/mailService");
 const Email = require("../../models/emailVerification.model");
+const moment = require('moment');
 
 const emailVerificationController = {
   // ......................send emailVerification .............................
@@ -140,22 +141,22 @@ const emailVerificationController = {
     }
   },
 
-   // ......................get editors .............................
-   async getEditors(req, res, next) {
+  // ......................get editors .............................
+  async getEditors(req, res, next) {
     try {
       const editors = await Email.find();
 
       if (editors.length == 0) {
         return res.status(404).json({
           success: false,
-          data: { error: "No edotor found" },
+          data: { error: "No editor found" },
         });
       } else {
         return res.status(200).json({
           success: true,
           data: { message: "Editors found", editors: editors },
         });
-      } 
+      }
     } catch (error) {
       return res.status(400).json({
         success: false,
@@ -164,23 +165,27 @@ const emailVerificationController = {
     }
   },
 
-
-   // ......................get active editors .............................
-   async getActiveEditors(req, res, next) {
+  // ......................get active editors .............................
+  async getActiveEditors(req, res, next) {
     try {
-      const editors = await Email.find();
+      const today = new Date();
+      const todayStart = moment(today).startOf("day").toDate();
+
+      const editors = await Email.find({
+        expiryDate: { $gte: todayStart },
+      });
 
       if (editors.length == 0) {
         return res.status(404).json({
           success: false,
-          data: { error: "No edotor found" },
+          data: { error: "No editor found" },
         });
       } else {
         return res.status(200).json({
           success: true,
           data: { message: "Editors found", editors: editors },
         });
-      } 
+      }
     } catch (error) {
       return res.status(400).json({
         success: false,
@@ -188,6 +193,8 @@ const emailVerificationController = {
       });
     }
   },
+
+ 
 };
 
 module.exports = emailVerificationController;

@@ -30,4 +30,6 @@ userRouter.put('/updateDuration/:id', emailController.updateDuration);
 userRouter.get('/checkLink/:id', emailController.checkLink);
 userRouter.get('/editors', emailController.getEditors);
 
+userRouter.get('/activeEditors', emailController.getActiveEditors);
+
 module.exports =  userRouter;
