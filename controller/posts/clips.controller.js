@@ -56,6 +56,8 @@ const clipController = {
         const videoUrl = post.video;
         const videoFormat = 'mp4';  // Assuming the format is mp4; adjust as necessary
 
+        console.log("start..", start, "..duration..", duration)
+
         await processVideo(videoUrl, videoFormat, start, duration, req, res);
     } catch (error) {
         console.error('Error processing video:', error);

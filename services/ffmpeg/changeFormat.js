@@ -44,21 +44,28 @@ const downloadFile = (url, dest) => {
   });
 };
 
-const changeFormat = async (file, format, scanType,res) => {
+const changeFormat = async (file, format, scanType, res) => {
   try {
-
-    console.log("file is ...", file, "... format is ...", format," ... ")
+    const datee = new Date();
+    const date = datee.toISOString().replace(/[-:.TZ]/g, "");
+    console.log(date);
+    console.log("date is", date);
+    console.log("file is ...", file, "... format is ...", format, " ... ");
     const fileName = extractFileName(file).split("/")[1];
-   // const localFilePath = path.join(__dirname, "temp", fileName);
-//   const tempTrimDir = path.join(fs.realpathSync('.'), 'trimmedVideo-')
-  //  const localFilePath = path.join(tempTrimDir, "trimmedVideo.mp4");
 
-        const tempTrimDirPath = path.join(await fs.realpathSync('.'), 'trimmedVideo');
+    console.log("file name is ..", fileName);
+    // const localFilePath = path.join(__dirname, "temp", fileName);
+    //   const tempTrimDir = path.join(fs.realpathSync('.'), 'trimmedVideo-')
+    //  const localFilePath = path.join(tempTrimDir, "trimmedVideo.mp4");
 
-    const localFilePath = path.join(tempTrimDirPath, "trimmedVideo.mp4");
+    const tempTrimDirPath = path.join(
+      await fs.realpathSync("."),
+      "trimmedVideo"
+    );
 
+    const localFilePath = path.join(tempTrimDirPath, `${date}.mp4`);
 
-    const outputFilePath = path.join(__dirname, "temp", `output.${format}`);
+    const outputFilePath = path.join(__dirname, "temp", `${date}.${format}`);
 
     // console.log("local...",localFilePath,"...output...", outputFilePath )
 
@@ -73,11 +80,11 @@ const changeFormat = async (file, format, scanType,res) => {
 
     // Convert the file format
     ffmpeg(localFilePath)
-  
       .output(outputFilePath)
       .outputFormat(format)
       .outputOptions([
-        '-vf', scanType === 'Progressive' ? 'yadif=1:-1:0': 'yadif=0:-1:1' , // yadif filter for deinterlacing or progressive
+        "-vf",
+        scanType === "Progressive" ? "yadif=1:-1:0" : "yadif=0:-1:1", // yadif filter for deinterlacing or progressive
         // '-vf', 'fps=50', // Set frame rate to 50
         // '-s', '720x576', // Set resolution to PAL standard
         // '-pix_fmt', 'yuv420p',
@@ -88,27 +95,30 @@ const changeFormat = async (file, format, scanType,res) => {
         // '-ac', '2',
         // '-ar', '48000'
       ])
-      .on('start', function (commandLine) {
-        console.log('Spawned FFmpeg with command: ' + commandLine);
+      .on("start", function (commandLine) {
+        console.log("Spawned FFmpeg with command: " + commandLine);
       })
-      .on('error', function (err) {
-        console.error('An error occurred during conversion: ' + err.message);
+      .on("error", function (err) {
+        console.error("An error occurred during conversion: " + err.message);
         cleanupFiles(localFilePath, outputFilePath);
         res.status(500).send({
           success: false,
           error: err.message,
         });
       })
-      .on('end', async function () {
-        console.log('Processing finished successfully');
+      .on("end", async function () {
+        console.log("Processing finished successfully");
         try {
-          const uploadedFile = await uploadFileToFirebase(outputFilePath, `output.${format}`);
+          const uploadedFile = await uploadFileToFirebase(
+            outputFilePath,
+            `${date}.${format}`
+          );
           res.status(200).send({
             success: true,
             videoUrl: uploadedFile,
           });
         } catch (uploadErr) {
-          console.error('Error uploading file: ', uploadErr);
+          console.error("Error uploading file: ", uploadErr);
           res.status(500).send({
             success: false,
             error: uploadErr.message,
@@ -118,9 +128,8 @@ const changeFormat = async (file, format, scanType,res) => {
         }
       })
       .run();
-
   } catch (error) {
-    console.error('An error occurred: ', error);
+    console.error("An error occurred: ", error);
     res.status(500).send({
       success: false,
       error: error.message,
@@ -130,14 +139,11 @@ const changeFormat = async (file, format, scanType,res) => {
 
 const cleanupFiles = (localFilePath, outputFilePath) => {
   fs.unlink(localFilePath, (err) => {
-    if (err) console.error('Error deleting local file: ', err);
+    if (err) console.error("Error deleting local file: ", err);
   });
   fs.unlink(outputFilePath, (err) => {
-    if (err) console.error('Error deleting output file: ', err);
+    if (err) console.error("Error deleting output file: ", err);
   });
 };
-
-
-
 
 module.exports = changeFormat;
