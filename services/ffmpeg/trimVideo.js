@@ -16,49 +16,47 @@ const processVideo = async (
   req,
   res
 ) => {
+  const filesToDelete = []; // Array to keep track of temporary files
   try {
+    const datee = new Date();
+    const date = datee.toISOString().replace(/[-:.TZ]/g, "");
+
+    console.log("start is...", start, "... duration is ...", duration);
+    const fileName = `${date}.mp4`;
+
     // Temporary directory to store the downloaded video
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "video-"));
-    const localFilePath = path.join(tempDir, "inputVideo.mp4");
+    // filesToDelete.push(tempDir);
+
+    const localFilePath = path.join(tempDir, fileName);
+    const outputFilePath = path.join(tempDir, `Output${fileName}`);
+    filesToDelete.push(localFilePath, outputFilePath);
 
     // Download the video file locally
     await downloadVideo(videoUrl, localFilePath);
-
-    // Temporary directory to store the trimmed video
-    // const realPath = await fs.realpath(".");
-    // const tempTrimDir = await fs.mkdtemp(path.join(realPath, "trimmedVideo-"));
-
-    const tempTrimDirPath = path.join(await fs.realpath('.'), 'trimmedVideo');
-    await fs.mkdir(tempTrimDirPath, { recursive: true });
-    const outputFilePath = path.join(tempTrimDirPath, 'trimmedVideo.mp4');
 
     // Process the video clip
     await cutVideo(localFilePath, videoFormat, start, duration, outputFilePath);
 
     // Upload the trimmed video to Firebase
-    const firebaseUrl = await uploadFileToFirebase(
-      outputFilePath,
-      "trimmedVideo.mp4"
-    );
+    const firebaseUrl = await uploadFileToFirebase(outputFilePath, fileName);
 
     // Send the Firebase video URL as response
     res.status(200).send({
       success: true,
       videoUrl: firebaseUrl,
-      duration: duration,
+      duration: duration - start,
     });
 
-    // Cleanup: Delete the temporary files
-   // await fs.unlink(localFilePath);
-  //  await fs.unlink(outputFilePath);
-  //  await fs.rmdir(tempDir);
-  //  await fs.rmdir(tempTrimDir);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({
       success: false,
       data: { error: error.message },
     });
+  } finally {
+    // Cleanup: Delete the temporary files
+    await cleanupFiles(filesToDelete);
   }
 };
 
@@ -119,7 +117,7 @@ const cutVideo = (
   return new Promise((resolve, reject) => {
     ffmpeg(inputFilePath)
       .setStartTime(startTime)
-      .duration(duration)
+      .duration(duration - startTime)
       .format(videoFormat)
       .videoCodec(vcodec)
       .outputOptions(options)
@@ -138,6 +136,22 @@ const cutVideo = (
       })
       .save(outputFilePath);
   });
+};
+
+const cleanupFiles = async (files) => {
+  for (const file of files) {
+    try {
+      const stat = await fs.lstat(file);
+      if (stat.isDirectory()) {
+        await fs.rm(file, { recursive: true, force: true });
+      } else {
+        await fs.unlink(file);
+      }
+      console.log(`Deleted file: ${file}`);
+    } catch (err) {
+      console.error(`Failed to delete file: ${file}`, err);
+    }
+  }
 };
 
 module.exports = processVideo;
